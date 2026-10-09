@@ -14,9 +14,19 @@ Five compact, display-only Home Assistant dashboard cards for [Omnibattery](http
 
 Cards follow the active Home Assistant theme. They can open entity details, but contain no battery-control buttons and make no service calls. There are no external runtime assets or dependencies on other custom cards.
 
-![Desktop dashboard in a light theme](docs/screenshots/desktop-light.png)
+![Desktop dashboard in a light theme](examples/desktop-light.png)
 
-<img src="docs/screenshots/mobile-dark.png" alt="Mobile dashboard in a dark theme" width="390" />
+<img src="examples/mobile-dark.png" alt="Mobile dashboard in a dark theme" width="390" />
+
+### Card previews
+
+| Card | Light theme | Dark theme |
+| --- | --- | --- |
+| Energy plan | ![Energy plan, light](examples/plan-light.png) | ![Energy plan, dark](examples/plan-dark.png) |
+| Overview | ![Overview, light](examples/overview-light.png) | ![Overview, dark](examples/overview-dark.png) |
+| Battery | ![Battery, light](examples/battery-light.png) | ![Battery, dark](examples/battery-dark.png) |
+| System battery | ![System battery, light](examples/system-battery-columns-light.png) | ![System battery, dark](examples/system-battery-columns-dark.png) |
+| Status | ![Status, light](examples/status-light.png) | ![Status, dark](examples/status-dark.png) |
 
 ## Requirements
 
@@ -69,7 +79,11 @@ Select a battery in the visual editor to fill its device ID. Repeat the Battery 
 
 ### System battery layouts
 
-<img src="docs/screenshots/system-battery-light.png" alt="System battery card in the default three-column layout, light theme" width="366" /> <img src="docs/screenshots/system-battery-dark.png" alt="System battery card in the default three-column layout, dark theme" width="366" />
+| Layout | Light theme | Dark theme |
+| --- | --- | --- |
+| Three columns | ![Three columns, light](examples/system-battery-columns-light.png) | ![Three columns, dark](examples/system-battery-columns-dark.png) |
+| Familiar stack | ![Familiar stack, light](examples/system-battery-stacked-light.png) | ![Familiar stack, dark](examples/system-battery-stacked-dark.png) |
+| Compact rows | ![Compact rows, light](examples/system-battery-compact-light.png) | ![Compact rows, dark](examples/system-battery-compact-dark.png) |
 
 The System battery card shows the installation's reported charge level and stored energy, followed by all discovered battery charge bars. It uses Omnibattery's reported system charge level rather than calculating an average of the batteries. Missing or unavailable readings remain unavailable.
 
@@ -170,11 +184,14 @@ npm test
 npm run build
 npx playwright install chromium
 npm run test:browser
+npm run update:examples
 ```
 
 The build produces one self-contained `dist/omnibattery-cards.js`. Demo fixtures use synthetic names and data; do not commit household identifiers, private Home Assistant URLs, credentials, or raw diagnostics.
 
-CI checks types, unit tests, the production build, and browser tests. To release, update `package.json` and the lockfile version together, add a changelog entry, and push a matching `vX.Y.Z` tag. The release workflow verifies the version, runs checks, builds, and attaches `omnibattery-cards.js` to a GitHub release for HACS.
+Run `npm run update:examples` after changing a card's appearance. The script starts and stops its own local demo server and Chromium browser, then writes PNGs directly to `examples/`: every registered card in light and dark themes, all three System battery layouts, and desktop/light and mobile/dark dashboards. It uses a fixed demo time, locale, timezone, and viewport sizes for repeatable captures. Install Chromium with `npx playwright install chromium` before the first run, and commit the regenerated PNGs with the change. If a newly registered card is missing from the demo, the script fails so its fixture can be added.
+
+CI checks types, unit tests, the production build, browser tests, and example generation. To release, update `package.json` and the lockfile version together, add a changelog entry, and push a matching `vX.Y.Z` tag. The release workflow verifies the version, runs checks, builds, and attaches `omnibattery-cards.js` to a GitHub release for HACS.
 
 ## Credits and license
 
