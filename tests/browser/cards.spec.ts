@@ -15,6 +15,27 @@ async function openDemo(page: Page) {
   await expect(page.locator('omnibattery-battery-card').getByRole('heading', { name: 'Battery 1' })).toBeVisible();
 }
 
+test('native Home Assistant card styles do not add a second header inset', async ({ page }) => {
+  await openDemo(page);
+  await page.evaluate(() => {
+    // Home Assistant 2026.10 styles this slotted class inside ha-card itself.
+    // Model the native host so standalone demo tests catch integration collisions.
+    customElements.define('ha-card', class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode:'open'}).innerHTML = '<style>:host{display:block}:host ::slotted(.card-header){padding:20px 16px 24px;margin-block:0;display:block;font-size:24px}</style><slot></slot>';
+      }
+    });
+  });
+  for (const type of ['plan', 'overview', 'battery', 'status']) {
+    const inset = await page.locator(`omnibattery-${type}-card`).getByRole('heading', {level:2}).evaluate(heading => {
+      const header = heading.parentElement!;
+      return { padding: getComputedStyle(header).padding, display: getComputedStyle(header).display };
+    });
+    expect(inset).toEqual({padding:'0px',display:'flex'});
+  }
+});
+
 test('hero reproduction captures the first viewport at 1586 by 992', async ({ page }) => {
   await page.setViewportSize({ width: 1586, height: 992 });
   await openDemo(page);

@@ -13,7 +13,7 @@ export class OmnibatteryPlanCard extends BaseCard {
   private observer?: ResizeObserver;
   static styles = [BaseCard.styles, css`
     :host { --plot-label: var(--secondary-text-color, #687080); }
-    .card-header { margin-bottom: 12px; }
+    .ob-header { margin-bottom: 12px; }
     .topline { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
     .period { color:var(--ob-secondary); font-size:12px; }
     .range { display:flex; gap:2px; padding:3px; background:var(--ob-subtle); border-radius:8px; }
@@ -42,7 +42,7 @@ export class OmnibatteryPlanCard extends BaseCard {
     .footnote p { margin:6px 0 0; } .footnote summary { cursor:pointer; }
     .inspect-hint { color:var(--ob-secondary); font-size:12px; margin-top:10px; }
     .activity-inspector { width:100%; }
-    @container(max-width:450px) { .card-header {margin-bottom:8px;} .card-header .subtitle {display:none;} .topline{margin-bottom:4px;} }
+    @container(max-width:450px) { .ob-header {margin-bottom:8px;} .ob-header .subtitle {display:none;} .topline{margin-bottom:4px;} }
     @media(max-width:450px) { .topline { align-items:flex-start; } .period { max-width:50%; } .legend { gap:7px 11px; } .inspector { gap:5px 12px; } }
   `];
   static getStubConfig() { return { type: 'custom:omnibattery-plan-card' }; }

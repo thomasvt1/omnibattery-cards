@@ -1,6 +1,6 @@
 {
   "name": "omnibattery-cards",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Read-only Home Assistant energy cards for Omnibattery",
   "type": "module",
   "license": "AGPL-3.0-or-later",
@@ -12,6 +12,14 @@
     "check": "tsc --noEmit",
     "test:browser": "playwright test"
   },
-  "dependencies": { "lit": "^3.3.3" },
-  "devDependencies": { "@playwright/test": "^1.56.0", "typescript": "^5.9.3", "vite": "^8.3.4", "vitest": "^5.0.3", "@types/node": "^24.0.0" }
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3",
+    "@types/node": "^24.0.0"
+  }
 }

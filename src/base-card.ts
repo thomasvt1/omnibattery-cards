@@ -113,7 +113,7 @@ export abstract class BaseCard extends LitElement {
     this.dispatchEvent(new CustomEvent('hass-more-info', { detail: { entityId }, bubbles: true, composed: true }));
   }
   protected renderHeader(defaultTitle: string, subtitle?: string) {
-    return html`<div class="card-header"><h2>${this.config.title || defaultTitle}</h2>${subtitle ? html`<span class="subtitle">${subtitle}</span>` : ''}</div>`;
+    return html`<div class="ob-header"><h2>${this.config.title || defaultTitle}</h2>${subtitle ? html`<span class="subtitle">${subtitle}</span>` : ''}</div>`;
   }
   protected renderNotice() {
     const error = this.registryError || this.snapshot.error;

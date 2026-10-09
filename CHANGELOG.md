@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Preserve compact header spacing inside Home Assistant's native `ha-card` element.
+- Verified live discovery, timeline, Nord Pool prices, battery telemetry, and status using unsaved Home Assistant previews.
+
 ## 0.1.0
 
 - Four display-only Home Assistant cards: Energy plan, Overview, Battery, and Status.

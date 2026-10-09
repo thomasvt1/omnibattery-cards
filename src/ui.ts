@@ -15,7 +15,7 @@ export const cardStyles = css`
     border-radius: var(--ha-card-border-radius, 12px); background: var(--ha-card-background, var(--card-background-color, #fff));
     box-shadow: none; overflow: hidden;
   }
-  .card-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  .ob-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
   h2 { margin: 0; font-size: 18px; line-height: 1.3; font-weight: 600; overflow-wrap: anywhere; letter-spacing: -.2px; }
   .subtitle { color: var(--ob-secondary); font-size: 12px; }
   button, input, select { font: inherit; color: inherit; }
