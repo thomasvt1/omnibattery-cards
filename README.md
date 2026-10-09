@@ -1,5 +1,7 @@
 # Omnibattery Cards
 
+<img src="https://raw.githubusercontent.com/thomasvt1/omnibattery-cards/main/icon.png" alt="Omnibattery Cards: a teal battery with stacked energy dashboard cards" width="128" height="128" />
+
 Five compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
 
 | Card | What it shows |
