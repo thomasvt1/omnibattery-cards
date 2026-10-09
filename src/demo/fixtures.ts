@@ -109,6 +109,10 @@ export function createDemo(scenario: DemoScenario = 'solar', now = new Date()): 
       operations[`${prefix}_charge_to_battery_kwh`] = array(index => seconds(index) && !isGap(index) ? round(Math.max(0, cellAt(index)) * seconds(index) / 3600) : null);
       operations[`${prefix}_discharge_from_battery_kwh`] = array(index => seconds(index) && !isGap(index) ? round(Math.max(0, -cellAt(index)) * seconds(index) / 3600) : null);
     }
+    operations.observed_seconds_by_action_by_interval = Array.from({length:96}, (_,index) =>
+      actualSeconds(index) && !isGap(index) ? { hold: index >= 8 && index < 24 ? actualSeconds(index) : 0 } : null);
+    operations.planned_delay_until = Array.from({length:96}, (_,index) =>
+      remainingSeconds(index) && index >= 8 && index < 24 ? new Date(today + 6 * 3_600_000).toISOString() : null);
     const extension = Array.from({ length: 48 }, (_, index) => ({
       extension_index: index,
       start: new Date(today + 86_400_000 + index * 900_000).toISOString(),
@@ -118,6 +122,7 @@ export function createDemo(scenario: DemoScenario = 'solar', now = new Date()): 
       charge_to_battery_kwh: round(Math.max(0, cellAt(index)) / 4),
       discharge_from_battery_kwh: round(Math.max(0, -cellAt(index)) / 4),
       planned_context_mask: index >= 8 && index < 24 ? 2 : 0,
+      delay_active: index >= 8 && index < 24,
     }));
     system('timeline', 'daily_operation_timeline', date, undefined, {
       schema_version: 1, timeline_available: true, local_date: date, timezone: 'UTC',

@@ -107,7 +107,7 @@ Semantic energy accents sit on quiet host-theme neutrals; the source expressions
 - **Home:** follows primary text color rather than introducing another saturated energy accent.
 
 ### Named Rules
-**The Energy Identity Rule.** Keep each energy role's color consistent across charts, activity rows, and live flow nodes.
+**The Energy Identity Rule.** Keep each energy role's color consistent across charts, the activity strip, and live flow nodes.
 
 **The Host Theme Rule.** Resolve host theme variables before fallback values; do not freeze the demo palette into cards.
 
@@ -135,7 +135,7 @@ Each custom element is an inline-size container. Card content is naturally sized
 
 Overview and Battery adapt to their own container width at 450px and tighten spacing again at 350px. Compact Overview places flow and daily totals side by side; its captions span the row underneath. Compact Battery lays instantaneous metrics and Today totals across horizontal columns, removing the temperature column when that reading is absent. These are container decisions, so a narrow dashboard column receives the compact composition on a wide screen too.
 
-The plan preserves every available chart row at small sizes, condensing plot heights and aligning plots and activity rows to a shared left gutter: 84px normally and 60px when the measured internal chart width is below 450px. Legends wrap. Interval details appear after inspection instead of permanently consuming space.
+The plan preserves every available chart row at small sizes, condensing plot heights and aligning plots and the activity strip to a shared left gutter: 84px normally and 60px when the measured internal chart width is below 450px. Legends wrap. Interval details appear after inspection instead of permanently consuming space.
 
 The demo illustrates the approved wide plan above three companion cards, with a 16px gap and start-aligned, content-sized cards. At 1000px its grid has two columns and full-width Status; at 650px the cards stack. Those page breakpoints belong to the demo shell; host Home Assistant dashboards control their own placement.
 
@@ -168,7 +168,7 @@ The configuration editor uses full-width native inputs and selects with a one-pi
 
 ### Energy Plan
 
-SVG rows share a time axis. Measured series are solid; projections use a 5px/5px dash and 0.8 opacity. Subtle area fills differentiate measured and projected coverage without hiding the grid. Missing values break paths rather than connecting fabricated observations. The current-time marker is dashed; selected intervals use a separate neutral selection line. Multiple activity rows preserve simultaneous activity. Pointer, touch, and keyboard inspection reveal the interval's values, while source and data notes stay secondary.
+SVG rows share a time axis. Measured series are solid; projections use a 5px/5px dash and 0.8 opacity. Subtle area fills differentiate measured and projected coverage without hiding the grid. Missing values break paths rather than connecting fabricated observations. The current-time marker is dashed; selected intervals use a separate neutral selection line. A single 11px rounded Activity strip follows the approved composition, with continuous amber solar charging, blue grid charging, teal discharging, and gray Hold blocks and a separate color legend. Projected activity is lighter. Multiple activities reported in a quarter share the strip's height, without implying order, duration, or simultaneity. Unreported activity remains unfilled, and Hold requires explicit evidence. Pointer, touch, and keyboard inspection reveal the interval's values, while source and data notes stay secondary.
 
 ### Live Flow and Battery Readings
 

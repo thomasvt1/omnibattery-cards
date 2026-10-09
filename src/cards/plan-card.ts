@@ -1,9 +1,16 @@
 import { css, html, svg, nothing } from 'lit';
 import { BaseCard } from '../base-card';
 import type { TimelineSlot, PriceSeries } from '../types';
+import { activityKinds, activitySegments, type ActivityKind } from '../data/activity';
 
 type ChartSeries = { label: string; color: string; values: (number | null)[]; forecast?: boolean; area?: boolean; step?: boolean };
 const COLORS = { solar: 'var(--ob-solar)', home: 'var(--ob-home)', battery: 'var(--ob-battery)', soc: 'var(--ob-soc)', price: 'var(--ob-price)', export: 'var(--ob-grid)' };
+const ACTIVITIES: Record<ActivityKind, {label: string; color: string}> = {
+  solar: { label: 'Solar charging', color: COLORS.solar },
+  grid: { label: 'Grid charging', color: COLORS.export },
+  discharge: { label: 'Discharging', color: COLORS.battery },
+  hold: { label: 'Hold', color: 'var(--ob-secondary)' },
+};
 
 export class OmnibatteryPlanCard extends BaseCard {
   static properties = { width: { state: true }, selected: { state: true }, extended: { state: true } };
@@ -30,6 +37,8 @@ export class OmnibatteryPlanCard extends BaseCard {
     .chart .forecast { stroke-dasharray:5 5; opacity:.8; }
     .legend { display:flex; flex-wrap:wrap; gap:7px 15px; font-size:11px; color:var(--ob-secondary); margin-top:8px; }
     .legend span { display:inline-flex; align-items:center; gap:5px; }
+    .legends { display:flex; flex-wrap:wrap; justify-content:space-between; column-gap:20px; }
+    .activity-key { width:15px; height:8px; border-radius:2px; background:var(--color); }
     .dot { width:8px; height:8px; border-radius:50%; background:var(--color); }
     .sample { width:19px; border-top:2px solid var(--ob-secondary); }
     .sample.dashed { border-top-style:dashed; }
@@ -128,13 +137,9 @@ export class OmnibatteryPlanCard extends BaseCard {
     return `${label}${index>=96?' +1':''}`;
   }
   private activityLabel(slot: TimelineSlot) {
-    const measured=slot.actionActual, planned=slot.actionForecast;
-    const labels=(mask:number|null,hold:boolean|null)=>[
-      mask!=null && (mask&1)?'solar charging':'',mask!=null && (mask&2)?'grid charging':'',
-      mask!=null && (mask&4)?'discharging':'',hold?'charge delay':'',
-    ].filter(Boolean).join(', ');
-    return [labels(measured,slot.holdActual) && `Measured activity: ${labels(measured,slot.holdActual)}`,
-      labels(planned,slot.holdForecast) && `Projected activity: ${labels(planned,slot.holdForecast)}`].filter(Boolean).join('. ');
+    const labels=(mask:number|null,hold:boolean|null)=>activityKinds(mask,hold).map(kind=>ACTIVITIES[kind].label.toLowerCase()).join(', ');
+    return [labels(slot.actionActual,slot.holdActual) && `Measured activity: ${labels(slot.actionActual,slot.holdActual)}`,
+      labels(slot.actionForecast,slot.holdForecast) && `Projected activity: ${labels(slot.actionForecast,slot.holdForecast)}`].filter(Boolean).join('. ');
   }
   private renderPlot(series: ChartSeries[], top:number, height:number, unit:string, count:number, fixed?:[number,number]) {
     const left = this.plotLeft, right = this.width-10;
@@ -165,17 +170,19 @@ export class OmnibatteryPlanCard extends BaseCard {
   }
   private renderActivity(slots: TimelineSlot[], top:number,count:number) {
     const left=this.plotLeft, right=this.width-10, cell=(right-left)/count;
-    const rows=[{label:'Solar charge',bit:1,color:COLORS.solar},{label:'Grid charge',bit:2,color:COLORS.export},{label:'Discharge',bit:4,color:COLORS.battery},{label:'Charge delay',bit:0,color:'var(--ob-secondary)'}];
-    return svg`${rows.map((r,row)=>svg`
-      <text x="0" y=${top+row*19+9}>${this.width<450?['Solar','Grid','Discharge','Delay'][row]:r.label}</text>
-      <rect x=${left} y=${top+row*19} width=${right-left} height="11" rx="3" fill="var(--ob-line)" opacity=".35"/>
-      ${slots.map((slot,i)=>{
-        const actual=r.bit ? slot.actionActual!=null && Boolean(slot.actionActual&r.bit) : slot.holdActual;
-        const planned=r.bit ? slot.actionForecast!=null && Boolean(slot.actionForecast&r.bit) : slot.holdForecast;
-        if(slot.skipped || (!actual&&!planned)) return nothing;
-        return svg`<rect x=${left+i*cell} y=${top+row*19} width=${Math.max(.5,cell-.6)} height="11" fill=${r.color} opacity=${actual?'.9':'.35'}><title>${slot.label}: ${r.label}, ${actual?'measured':'projected'}</title></rect>`;
-      })}
-    `)}`;
+    const { currentIndex, currentProgress }=this.snapshot.timeline;
+    const segments=activitySegments(slots,currentIndex,currentProgress);
+    return svg`<g class="activity-strip">
+      <text x="0" y=${top+9}>Activity</text>
+      <rect class="activity-track" x=${left} y=${top} width=${right-left} height="11" rx="5.5" fill="var(--ob-line)" opacity=".25"/>
+      <defs><clipPath id="activity-clip"><rect x=${left} y=${top} width=${right-left} height="11" rx="5.5"/></clipPath></defs>
+      <g clip-path="url(#activity-clip)">
+        ${segments.map(segment=>svg`<g class="activity-segment" data-projected=${segment.projected}>
+          <title>${this.timeLabel(Math.floor(segment.start))}–${this.timeLabel(Math.ceil(segment.end))}: ${segment.kinds.map(kind=>ACTIVITIES[kind].label).join(', ')} (${segment.projected?'projected':'measured'}${segment.kinds.length>1?'; activities reported within this interval':''})</title>
+          ${segment.kinds.map((kind,index)=>svg`<rect x=${left+segment.start*cell} y=${top+index*11/segment.kinds.length} width=${(segment.end-segment.start)*cell} height=${11/segment.kinds.length} fill=${ACTIVITIES[kind].color} opacity=${segment.projected?'.5':'.95'}/>`)}
+        </g>`)}
+      </g>
+    </g>`;
   }
   protected render() {
     const model=this.snapshot, timeline=model.timeline;
@@ -190,7 +197,7 @@ export class OmnibatteryPlanCard extends BaseCard {
     const hasPrices=importValues.some(v=>v!=null)||exportValues.some(v=>v!=null);
     const prices:ChartSeries[]=[{label:'Import price',color:COLORS.price,values:importValues,step:true},{label:'Export price',color:COLORS.export,values:exportValues,step:true}];
     const compact=this.width<450;
-    const powerTop=26, powerHeight=compact?84:120, socTop=compact?136:178, priceTop=compact?198:256, activityTop=hasPrices?(compact?260:334):(compact?198:256), chartHeight=activityTop+98;
+    const powerTop=26, powerHeight=compact?84:120, socTop=compact?136:178, priceTop=compact?198:256, activityTop=hasPrices?(compact?260:334):(compact?198:256), chartHeight=activityTop+38;
     const left=this.plotLeft,right=this.width-10;
     const nowX=left+(timeline.currentIndex+timeline.currentProgress)/count*(right-left);
     const selectedX=left+(selected+.5)/count*(right-left);
@@ -210,12 +217,15 @@ export class OmnibatteryPlanCard extends BaseCard {
           ${this.renderPlot(soc,socTop,compact?34:46,'%',count,[0,100])}
           ${hasPrices?this.renderPlot(prices,priceTop,compact?34:46,model.importPrices?.unit||model.exportPrices?.unit||'Price',count):nothing}
           ${this.renderActivity(slots,activityTop,count)}
-          <line class="now" x1=${nowX} x2=${nowX} y1="20" y2=${activityTop+68}/><text x=${Math.min(right-25,Math.max(left+25,nowX))} y="12" text-anchor="middle">${timeline.stale?'Last update':'Now'}</text>
-          ${this.selected!=null?svg`<line class="selected" x1=${selectedX} x2=${selectedX} y1="20" y2=${activityTop+68}/>`:nothing}
+          <line class="now" x1=${nowX} x2=${nowX} y1="20" y2=${activityTop+11}/><text x=${Math.min(right-25,Math.max(left+25,nowX))} y="12" text-anchor="middle">${timeline.stale?'Last update':'Now'}</text>
+          ${this.selected!=null?svg`<line class="selected" x1=${selectedX} x2=${selectedX} y1="20" y2=${activityTop+11}/>`:nothing}
           ${ticks.map(i=>svg`<text x=${left+i/count*(right-left)} y=${chartHeight-4} text-anchor=${i===0?'start':i===count?'end':'middle'}>${this.timeLabel(i)}</text>`)}
         </svg>
       </div>
-      <div class="legend">${activeSeries.map(s=>html`<span><i class="dot" style=${`--color:${s.color}`}></i>${s.label}</span>`)}<span><i class="sample"></i>Measured</span><span><i class="sample dashed"></i>Projected</span></div>
+      <div class="legends">
+        <div class="legend">${activeSeries.map(s=>html`<span><i class="dot" style=${`--color:${s.color}`}></i>${s.label}</span>`)}<span><i class="sample"></i>Measured</span><span><i class="sample dashed"></i>Projected</span></div>
+        <div class="legend activity-legend" aria-label="Activity colors">${Object.values(ACTIVITIES).map(activity=>html`<span><i class="activity-key" style=${`--color:${activity.color}`}></i>${activity.label}</span>`)}</div>
+      </div>
       ${slot&&this.selected!=null?html`<div class="inspector"><strong>${this.timeLabel(selected)}${slot.repeated?' · repeated hour':''}${slot.skipped?' · skipped hour':''}</strong>
         <span>Solar <span class="value">${this.format(slot.solarActualKw??slot.solarForecastKw,'kW')}</span></span>
         <span>Home <span class="value">${this.format(slot.homeActualKw??slot.homeForecastKw,'kW')}</span></span>
@@ -226,7 +236,7 @@ export class OmnibatteryPlanCard extends BaseCard {
         <span>${selected<timeline.currentIndex?'Measured':selected>timeline.currentIndex?'Projected':'Current interval · partial'}</span>
         ${this.activityLabel(slot)?html`<span class="activity-inspector">${this.activityLabel(slot)}</span>`:nothing}
       </div>`:html`<div class="inspect-hint">Touch or use arrow keys to inspect an interval.</div>`}
-      <details class="footnote"><summary>Chart details</summary><p>Battery power is cell-side: positive charging, negative discharging. Activities may change within an interval.${hasPrices?' Prices show published intervals.':''}</p></details>
+      <details class="footnote"><summary>Chart details</summary><p>Battery power is cell-side: positive charging, negative discharging. Lighter activity blocks are projected. Split colors show multiple activities reported within a quarter, without implying their order or duration. Unfilled activity means no supported activity was reported; Hold requires explicit hold or delay evidence.${hasPrices?' Prices show published intervals.':''}</p></details>
     </ha-card>`;
   }
 }

@@ -341,7 +341,7 @@
       {
         "name": "The Energy Identity Rule",
         "section": "colors",
-        "body": "Keep each energy role's color consistent across charts, activity rows, and live flow nodes."
+        "body": "Keep each energy role's color consistent across charts, the activity strip, and live flow nodes."
       },
       {
         "name": "The Host Theme Rule",

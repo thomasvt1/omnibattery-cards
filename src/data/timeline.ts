@@ -11,6 +11,20 @@ const netEnergy = (charge: number | null, discharge: number | null): number | nu
   charge === null && discharge === null ? null : (charge ?? 0) - (discharge ?? 0);
 const mask = (value: number | null): number | null => value !== null && Number.isInteger(value) && value >= 0 && value <= 7 ? value : null;
 
+/** Delay context alone can mean the feature is enabled, not that charging is held. */
+function delayHold(action: number | null, delay: Record<string, unknown>, until: unknown, after: number,
+  current = false, explicitlyActive = false): boolean | null {
+  if (action !== 0 || delay.enabled === false || delay.weekly_full_charge_bypasses_delay === true) return null;
+  const state = (text(delay.state) ?? text(delay.status) ?? '').trim().toLowerCase();
+  if (state === 'skipped - full charge day') return null;
+  const boundary = typeof until === 'string' ? Date.parse(until) : NaN;
+  const currentDelay = current && (state.startsWith('delayed') ||
+    ['waiting for solar', 'waiting for forecast', 'waiting_for_solar', 'waiting', 'blocked'].includes(state));
+  // A known release time that has passed cannot support a projected hold.
+  if (Number.isFinite(boundary)) return boundary > after ? true : null;
+  return explicitlyActive || currentDelay ? true : null;
+}
+
 interface WallCell { start?: string; end?: string; duration: number; occurrences: number[]; }
 const gridCache = new Map<string, WallCell[]>();
 
@@ -69,6 +83,7 @@ export function parseTimeline(entity?: HassEntity, now = new Date(), fallbackZon
     result.error = 'The timeline has invalid date or interval metadata.'; return result;
   }
   const series = record(data.series), operations = record(data.operations);
+  const delay = record(data.delay);
   if (!Object.values(series).some(Array.isArray) || !Object.keys(operations).length) {
     result.error = 'The timeline is missing its energy or operation series.'; return result;
   }
@@ -127,8 +142,12 @@ export function parseTimeline(entity?: HassEntity, now = new Date(), fallbackZon
       slot.batteryActualKw = actualEnergy !== null && coverage > 0 ? actualEnergy * 3600 / coverage : null;
       const observed = record(list(operations.observed_seconds_by_action_by_interval)[index]);
       const explicitHold = number(observed.hold);
-      const delayContext = (getNumber(operations, 'actual_context_mask', index) ?? 0) & 2;
-      slot.holdActual = explicitHold !== null ? explicitHold > 0 : slot.actionActual === 0 && delayContext !== 0 ? true : null;
+      // delay_until is a mixed actual/planned field. Historical cells and a
+      // currently observed delay context can use it without inventing a hold
+      // from a forecast that has not happened yet.
+      const actualDelay = (getNumber(operations, 'actual_context_mask', index) ?? 0) & 2;
+      slot.holdActual = explicitHold !== null ? explicitHold > 0 : delayHold(slot.actionActual, delay,
+        actualDelay ? getText(operations, 'delay_until', index) : null, Date.parse(slot.start ?? ''), current);
     }
     if (!past && !result.stale) {
       const remaining = slot.repeated && wall.occurrences.length > 1 ? wall.occurrences.reduce((sum, start) =>
@@ -141,8 +160,11 @@ export function parseTimeline(entity?: HassEntity, now = new Date(), fallbackZon
       slot.actionForecast = mask(getNumber(operations, 'planned_action_mask', index));
       const forecastEnergy = netEnergy(getNumber(operations, 'planned_charge_to_battery_kwh', index), getNumber(operations, 'planned_discharge_from_battery_kwh', index));
       slot.batteryForecastKw = forecastEnergy !== null && remaining > 0 ? forecastEnergy * 3600 / remaining : null;
-      const delayContext = (getNumber(operations, 'planned_context_mask', index) ?? 0) & 2;
-      slot.holdForecast = slot.actionForecast === 0 && delayContext !== 0 ? true : null;
+      const plannedDelayContext = (getNumber(operations, 'planned_context_mask', index) ?? 0) & 2;
+      const plannedDelay = getText(operations, 'planned_delay_until', index) ??
+        (plannedDelayContext ? getText(operations, 'delay_until', index) : null);
+      slot.holdForecast = delayHold(slot.actionForecast, delay, plannedDelay,
+        Math.max(Date.parse(slot.start ?? ''), referenceTime), current);
     }
   }
   if (result.slots.some(slot => slot.repeated)) result.warnings.push('Repeated daylight-saving quarters include both occurrences.');
@@ -177,7 +199,8 @@ function appendExtension(result: TimelineModel, data: Record<string, unknown>): 
       const charging = number(item.charge_to_battery_kwh) ?? (solarCharge === null && gridCharge === null ? null : (solarCharge ?? 0) + (gridCharge ?? 0));
       const energy = netEnergy(charging, number(item.discharge_from_battery_kwh) ?? number(item.battery_to_home_kwh));
       slot.batteryForecastKw = energy !== null && duration > 0 ? energy * 3600 / duration : null;
-      slot.holdForecast = item.delay_active === true || slot.actionForecast === 0 && ((number(item.planned_context_mask) ?? number(item.context_mask) ?? 0) & 2) !== 0 ? true : null;
+      slot.holdForecast = delayHold(slot.actionForecast, record(data.delay), item.delay_until,
+        Date.parse(start), false, item.delay_active === true);
     }
     slots.set(index, slot);
   }

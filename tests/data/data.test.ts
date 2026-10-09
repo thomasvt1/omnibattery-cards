@@ -168,7 +168,71 @@ describe('schema 1 timeline', () => {
     expect(result.slots[49].holdForecast).toBeNull();
     const operations = source.attributes.operations as Record<string, unknown[]>;
     operations.planned_context_mask = Array(96).fill(0); operations.planned_context_mask[49] = 2;
-    expect(parseTimeline(source, NOW).slots[49].holdForecast).toBe(true);
+    operations.actual_context_mask = Array(96).fill(2);
+    operations.planned_grid_charge_decision = Array(96).fill('not_needed');
+    const contextOnly = parseTimeline(source, NOW);
+    expect(contextOnly.slots[47].holdActual).toBeNull();
+    expect(contextOnly.slots[49].holdForecast).toBeNull();
+  });
+
+  it('requires a release boundary or explicit current delay state to infer hold', () => {
+    const source = timeline({ delay: { enabled: true, state: 'Delayed' } });
+    const operations = source.attributes.operations as Record<string, unknown[]>;
+    operations.actual_context_mask = Array(96).fill(2);
+    operations.planned_context_mask = Array(96).fill(2);
+    operations.delay_until = Array(96).fill(null);
+    operations.delay_until[47] = '2026-10-09T10:15:00Z';
+    operations.delay_until[49] = '2026-10-09T10:30:00Z';
+    let slots = parseTimeline(source, NOW).slots;
+    expect(slots[47].holdActual).toBe(true);
+    expect(slots[48].holdActual).toBe(true);
+    expect(slots[48].holdForecast).toBe(true);
+    expect(slots[49].holdForecast).toBe(true);
+    expect(slots[50].holdForecast).toBeNull(); // current status cannot fill future cells
+
+    operations.delay_until[48] = '2026-10-09T10:05:00Z';
+    slots = parseTimeline(source, NOW).slots;
+    expect(slots[48].holdActual).toBe(true); // delay occurred in the observed part
+    expect(slots[48].holdForecast).toBeNull(); // release already passed
+
+    operations.actual_action_mask[48] = 1;
+    operations.planned_action_mask[49] = 4;
+    slots = parseTimeline(source, NOW).slots;
+    expect(slots[48].holdActual).toBeNull();
+    expect(slots[49].holdForecast).toBeNull();
+  });
+
+  it('suppresses disabled or bypassed delay inference while retaining explicit observed hold', () => {
+    const source = timeline();
+    const operations = source.attributes.operations as Record<string, unknown[]>;
+    operations.actual_context_mask = Array(96).fill(2);
+    operations.planned_context_mask = Array(96).fill(2);
+    operations.delay_until = Array(96).fill('2026-10-09T12:00:00Z');
+    operations.observed_seconds_by_action_by_interval = Array.from({ length: 96 }, () => ({}));
+    operations.observed_seconds_by_action_by_interval[46] = { hold: 120 };
+    operations.observed_seconds_by_action_by_interval[45] = { hold: 0 };
+    for (const delay of [{ enabled: false, state: 'Delayed' }, { enabled: true, weekly_full_charge_bypasses_delay: true }, { state: 'Skipped - Full Charge Day' }]) {
+      source.attributes.delay = delay;
+      const slots = parseTimeline(source, NOW).slots;
+      expect(slots[45].holdActual).toBe(false);
+      expect(slots[46].holdActual).toBe(true);
+      expect(slots[47].holdActual).toBeNull();
+      expect(slots[49].holdForecast).toBeNull();
+    }
+  });
+
+  it('requires explicit extension delay evidence and never treats a charging interval as hold', () => {
+    const projected = (index: number, extra: Record<string, unknown>) => ({ extension_index: index,
+      start: `2026-10-10T00:${String(index * 15).padStart(2, '0')}:00+02:00`,
+      end: index === 3 ? '2026-10-10T01:00:00+02:00' : `2026-10-10T00:${String((index + 1) * 15).padStart(2, '0')}:00+02:00`,
+      action_mask: 0, context_mask: 2, ...extra });
+    const source = timeline({ extended_projection: [projected(0, {}), projected(1, { delay_active: true }),
+      projected(2, { delay_active: true, action_mask: 1 }), projected(3, { delay_until: '2026-10-10T01:00:00+02:00' })] });
+    const slots = parseTimeline(source, NOW).slots;
+    expect(slots[96].holdForecast).toBeNull();
+    expect(slots[97].holdForecast).toBe(true);
+    expect(slots[98].holdForecast).toBeNull();
+    expect(slots[99].holdForecast).toBe(true);
   });
 
   it('rejects malformed and unsupported payloads without throwing', () => {

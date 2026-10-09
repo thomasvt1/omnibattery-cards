@@ -134,6 +134,37 @@ test('timeline supports touch inspection', async ({ browser }) => {
   await context.close();
 });
 
+test('activity uses one compact continuous strip with its own color legend', async ({ page }) => {
+  await openDemo(page);
+  const plan = page.locator('omnibattery-plan-card');
+  const strip = plan.locator('.activity-strip');
+  await expect(strip.locator('text')).toHaveText('Activity');
+  await expect(strip.locator('.activity-track')).toHaveAttribute('height', '11');
+  await expect(plan.locator('.activity-legend')).toHaveText('Solar chargingGrid chargingDischargingHold');
+  const geometry = await strip.evaluate(element => {
+    const track = element.querySelector<SVGRectElement>('.activity-track')!;
+    const top = Number(track.getAttribute('y'));
+    return [...element.querySelectorAll<SVGRectElement>('.activity-segment rect')].map(rect => ({
+      top: Number(rect.getAttribute('y')) - top,
+      bottom: Number(rect.getAttribute('y')) + Number(rect.getAttribute('height')) - top,
+      width: Number(rect.getAttribute('width')),
+    }));
+  });
+  expect(geometry.length).toBeGreaterThan(0);
+  for (const segment of geometry) {
+    expect(segment.top).toBeGreaterThanOrEqual(0);
+    expect(segment.bottom).toBeLessThanOrEqual(11);
+    expect(segment.width).toBeGreaterThan(0);
+  }
+  // Adjacent quarter-hour samples become continuous blocks, not 96 separated ticks.
+  expect(geometry.length).toBeLessThan(12);
+  const chart = plan.getByRole('slider');
+  await chart.focus();
+  await chart.press('Home');
+  await chart.press('ArrowRight');
+  await expect(chart).toHaveAttribute('aria-valuenow', '1');
+});
+
 test('sparse extension ends at its real horizon without overflowing chart ticks', async ({ page }) => {
   await openDemo(page);
   await page.evaluate(type => {
