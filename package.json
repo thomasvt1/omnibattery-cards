@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "tsc --noEmit",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "update:examples": "node scripts/update-examples.mjs"
   },
   "dependencies": {
     "lit": "^3.3.3"
