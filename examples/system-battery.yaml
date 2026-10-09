@@ -1,0 +1,13 @@
+# Compare all three System battery layouts, or copy a single card into your dashboard.
+# The cards automatically discover every battery in the selected installation.
+type: vertical-stack
+cards:
+  - type: custom:omnibattery-system-battery-card
+    title: System battery · C
+    layout: columns # Default; at most three columns, with additional batteries wrapping.
+  - type: custom:omnibattery-system-battery-card
+    title: System battery · A
+    layout: stacked
+  - type: custom:omnibattery-system-battery-card
+    title: System battery · B
+    layout: compact

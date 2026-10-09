@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Add the System battery card with the reported system charge level, total stored energy, and a charge bar for every battery.
+- Default to layout C with at most three columns and additional rows for larger installations.
+- Offer layouts A (stacked) and B (compact) through the visual editor and YAML.
+- Keep unavailable batteries visible and system charge independent of individual readings.
+
 ## 0.1.2
 
 - Match the approved design with one continuous, rounded Activity strip and a compact color legend.

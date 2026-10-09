@@ -27,12 +27,13 @@ export interface HomeAssistant {
     subscribeEvents?: (callback: (event: unknown) => void, eventType: string) => Promise<() => void>;
   };
 }
-export type CardType = 'custom:omnibattery-plan-card' | 'custom:omnibattery-overview-card' | 'custom:omnibattery-battery-card' | 'custom:omnibattery-status-card';
+export type CardType = 'custom:omnibattery-plan-card' | 'custom:omnibattery-overview-card' | 'custom:omnibattery-battery-card' | 'custom:omnibattery-system-battery-card' | 'custom:omnibattery-status-card';
 export interface CardConfig {
   type: CardType; title?: string; integration_id?: string; battery?: string;
   entities?: Record<string, string>; grid_inverted?: boolean;
   import_price_entity?: string; export_price_entity?: string;
   show_extension?: boolean;
+  layout?: 'columns' | 'stacked' | 'compact';
 }
 export interface Metric { value: number | null; entityId?: string; }
 export interface BatteryModel {

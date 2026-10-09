@@ -24,6 +24,9 @@ const batteryMetrics: Override[] = [
   ['batteryAcPower', 'Battery AC power'], ['batteryTemperature', 'Temperature'],
   ['batteryDailyCharge', 'Charged today'], ['batteryDailyDischarge', 'Discharged today'],
 ];
+const systemBatteryMetrics: Override[] = [
+  ['soc', 'Charge level'], ['stored', 'Stored energy'], ['capacity', 'Battery capacity'],
+];
 
 const integrationEntity = (entity: RegistryEntity) =>
   entity.platform === 'omnibattery' || entity.platform === 'marstek_venus';
@@ -149,6 +152,7 @@ export class OmnibatteryCardEditor extends LitElement {
     const config = this.config;
     if (!config) return nothing;
     const isBattery = config.type === 'custom:omnibattery-battery-card';
+    const isSystemBattery = config.type === 'custom:omnibattery-system-battery-card';
     const isPlan = config.type === 'custom:omnibattery-plan-card';
     const entities = this.registry.entities.filter(integrationEntity);
     const integrationIds = [...new Set(entities.map(entity => entity.config_entry_id).filter((id): id is string => !!id))];
@@ -179,6 +183,15 @@ export class OmnibatteryCardEditor extends LitElement {
               ? html`<option value=${config.integration_id} .selected=${true}>${config.integration_id} (unavailable)</option>` : nothing}
           </select>
         </label>
+        ${isSystemBattery ? html`
+          <label class="field" for="layout"><span id="layout-label">Layout</span>
+            <select id="layout" aria-labelledby="layout-label"
+              @change=${(event: Event) => this.updateConfig('layout', this.inputValue(event))}>
+              <option value="columns" .selected=${(config.layout ?? 'columns') === 'columns'}>C — Three columns (default)</option>
+              <option value="stacked" .selected=${config.layout === 'stacked'}>A — Familiar stack</option>
+              <option value="compact" .selected=${config.layout === 'compact'}>B — Compact rows</option>
+            </select>
+          </label>` : nothing}
         ${isBattery ? html`
           <label class="field" for="battery"><span id="battery-label">Battery device</span>
             <select id="battery" aria-labelledby="battery-label" aria-describedby="battery-help"
@@ -200,13 +213,13 @@ export class OmnibatteryCardEditor extends LitElement {
         <details>
           <summary>Entity overrides</summary>
           <p class="help">Optional. Use these when discovery cannot identify a source, or to select another sensor. Empty fields restore automatic discovery.</p>
-          ${(isBattery ? batteryMetrics : sources).map(([key, label, help]) => this.entityField(key, label, help))}
-          ${!isBattery ? html`<label class="toggle"><input type="checkbox" .checked=${config.grid_inverted === true}
+          ${(isBattery ? batteryMetrics : isSystemBattery ? systemBatteryMetrics : sources).map(([key, label, help]) => this.entityField(key, label, help))}
+          ${!isBattery && !isSystemBattery ? html`<label class="toggle"><input type="checkbox" .checked=${config.grid_inverted === true}
             @change=${(event: Event) => this.updateConfig('grid_inverted', (event.target as HTMLInputElement).checked)} />
             <span>Grid source is positive when exporting</span>
           </label>` : nothing}
-          ${!isBattery && !isPlan ? systemMetrics.map(([key, label, help]) => this.entityField(key, label, help)) : nothing}
-          ${isBattery || !isPlan ? html`<p class="help">Explicit battery-cell and AC power overrides must be positive when charging and negative when discharging. AC and cell power are kept separate.</p>` : nothing}
+          ${!isBattery && !isPlan && !isSystemBattery ? systemMetrics.map(([key, label, help]) => this.entityField(key, label, help)) : nothing}
+          ${!isSystemBattery && (isBattery || !isPlan) ? html`<p class="help">Explicit battery-cell and AC power overrides must be positive when charging and negative when discharging. AC and cell power are kept separate.</p>` : nothing}
         </details>
         <datalist id="entities">${stateIds.map(id => html`<option value=${id}>${String(this.hass?.states[id].attributes.friendly_name ?? id)}</option>`)}</datalist>
       </div>`;

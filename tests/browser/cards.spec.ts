@@ -7,6 +7,7 @@ const planType = 'custom:omnibattery-plan-card' as const;
 const overviewType = 'custom:omnibattery-overview-card' as const;
 const batteryType = 'custom:omnibattery-battery-card' as const;
 const statusType = 'custom:omnibattery-status-card' as const;
+const systemType = 'custom:omnibattery-system-battery-card' as const;
 type CardElement = HTMLElement & { hass: HomeAssistant & { __demoDiagnostics: DemoDiagnostics } };
 
 async function openDemo(page: Page) {
@@ -27,7 +28,7 @@ test('native Home Assistant card styles do not add a second header inset', async
       }
     });
   });
-  for (const type of ['plan', 'overview', 'battery', 'status']) {
+  for (const type of ['plan', 'overview', 'battery', 'status', 'system-battery']) {
     const inset = await page.locator(`omnibattery-${type}-card`).getByRole('heading', {level:2}).evaluate(heading => {
       const header = heading.parentElement!;
       return { padding: getComputedStyle(header).padding, display: getComputedStyle(header).display };
@@ -40,7 +41,7 @@ test('hero reproduction captures the first viewport at 1586 by 992', async ({ pa
   await page.setViewportSize({ width: 1586, height: 992 });
   await openDemo(page);
   await page.evaluate(() => { window.demo.setTheme('light'); window.scrollTo(0, 0); });
-  for (const name of ['plan', 'overview', 'battery', 'status']) {
+  for (const name of ['plan', 'overview', 'battery', 'status', 'system-battery']) {
     await expect(page.locator(`omnibattery-${name}-card`).getByRole('heading', { level: 2 })).toBeVisible();
   }
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -50,7 +51,7 @@ test('hero reproduction captures the first viewport at 1586 by 992', async ({ pa
 
 for (const viewport of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'tablet', width: 820, height: 1100 }, { name: 'phone', width: 390, height: 844 }]) {
   for (const theme of ['light', 'dark'] as const) {
-    test(`${viewport.name} ${theme}: all four cards fit and render`, async ({ page }) => {
+    test(`${viewport.name} ${theme}: all five cards fit and render`, async ({ page }) => {
       await page.setViewportSize(viewport);
       const failures: string[] = [];
       page.on('pageerror', error => failures.push(error.message));
@@ -64,14 +65,14 @@ for (const viewport of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 
       await expect(page.locator('omnibattery-plan-card').getByText('Projected', { exact: true })).toBeVisible();
       const overflow = await page.evaluate(() => ({
         document: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        cards: [...document.querySelectorAll<HTMLElement>('omnibattery-plan-card, omnibattery-overview-card, omnibattery-battery-card, omnibattery-status-card')]
+        cards: [...document.querySelectorAll<HTMLElement>('omnibattery-plan-card, omnibattery-overview-card, omnibattery-battery-card, omnibattery-status-card, omnibattery-system-battery-card')]
           .map(card => ({ name: card.tagName, overflow: card.scrollWidth - card.clientWidth })),
       }));
       expect(overflow.document).toBeLessThanOrEqual(1);
       expect(overflow.cards.filter(card => card.overflow > 1)).toEqual([]);
       await mkdir('.impeccable/review', { recursive: true });
       await page.screenshot({ path: `.impeccable/review/${viewport.name}-${theme}.png`, fullPage: true });
-      for (const type of [planType, overviewType, batteryType, statusType]) {
+      for (const type of [planType, overviewType, batteryType, statusType, systemType]) {
         await page.evaluate(type => window.demo.showEditor(type), type);
         const editor = page.locator('omnibattery-card-editor');
         await expect(editor.getByLabel('Title', { exact: true })).toBeVisible();

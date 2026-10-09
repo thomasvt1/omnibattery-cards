@@ -139,6 +139,8 @@ The plan preserves every available chart row at small sizes, condensing plot hei
 
 The demo illustrates the approved wide plan above three companion cards, with a 16px gap and start-aligned, content-sized cards. At 1000px its grid has two columns and full-width Status; at 650px the cards stack. Those page breakpoints belong to the demo shell; host Home Assistant dashboards control their own placement.
 
+System battery adds three selectable internal layouts. The default `columns` layout uses one to three equal-width columns according to the discovered battery count; additional batteries continue on new rows. Names wrap, readings align toward the bottom of each item, and vertical rules separate adjacent columns within each row. `stacked` uses full-width rows with a name and right-aligned reading above each bar. `compact` aligns each name, bar, and reading across one row and moves the system reading into the header. At a container width of 350px or less, spacing and the summary icon tighten while the selected layout remains intact.
+
 ## Elevation & Depth
 
 Cards explicitly use no shadow. Depth comes from thin outlines, divider rules, subtle inset fills, and lightly tinted SVG icon discs. A typical disc mixes its semantic color at roughly 9–11% with the surface or transparency; node hover increases tint to 15%. There are no motion tokens or decorative entrance animations. The shared styles disable animation and transitions when reduced motion is requested.
@@ -178,6 +180,14 @@ Outlined SVG discs identify solar, home, grid, and battery. Connections show AC 
 
 Flat rows pair a small tinted SVG disc with a title and optional secondary detail. Thin rules separate rows; long text wraps. Rows with an inspectable sensor become buttons, preserving the same layout and gaining underline hover and visible focus. Meaning never depends on color alone.
 
+### System Battery
+
+A charge-only system summary and individual battery list reuse the card surface, theme text, teal energy accent, neutral meter track, and transparent inspection buttons. The default columns and optional stacked layouts show a system battery SVG disc, reported system charge, stored energy versus capacity, and an aggregate meter above a divider. Compact omits the disc and aggregate meter, placing stored energy beneath the title and system charge on its right. All three layouts retain every discovered battery and its individual meter; the editor and YAML select the layout.
+
+The system reading is the reported Omnibattery SOC, not a frontend average of individual percentages. Its local emphasis is 24px semibold; individual percentages are 20px semibold in columns, 15px medium in stacked, and 14px medium in compact. These variant-specific values do not extend the shared typography scale. Aggregate meters are 9px high and individual meters 5px, with softly rounded ends. The system disc uses a 12% teal tint.
+
+Unknown charge shows an em dash and an explicit Unavailable label, plus an unfilled track with an unavailable accessible description rather than a zero-valued meter. Known meters expose their value accessibly; the visual fill is clamped to the track while the text preserves the reported percentage. A missing battery list produces explanatory text. Backed readings open sensor details, with underline hover and a two-pixel theme-primary focus outline offset by four pixels. The card adds no battery-control actions or operational telemetry.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -185,6 +195,7 @@ Flat rows pair a small tinted SVG disc with a title and optional secondary detai
 - **Do** keep measured and projected data visually distinct and preserve missing-data gaps.
 - **Do** size cards to content and use their container width to adapt dense readings.
 - **Do** use inline SVG icons, visible focus, and textual status explanations.
+- **Do** keep the reported system charge separate from individual battery readings, and continue additional batteries on new rows in the default three-column maximum layout.
 
 ### Don't:
 - **Don't** turn demo readings, theme samples, or page composition into mandatory host-dashboard values.

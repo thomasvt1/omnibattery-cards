@@ -1,6 +1,10 @@
 # Omnibattery card collection
 
-Mode: Operate. The user inspects household energy on desktop, tablet, and phone, in Home Assistant light or dark mode. Four independently usable cards fit the surrounding dashboard.
+Mode: Operate. The user inspects household energy on desktop, tablet, and phone, in Home Assistant light or dark mode. Five independently usable cards fit the surrounding dashboard.
+
+## System battery card
+
+Approved on 2026-10-09: `.impeccable/mocks/system-battery-c.png` is the default new System battery card. The user requested at most three columns with additional batteries continuing on new rows. Preserve its system charge summary, aggregate bar, divider, and per-battery columns with small bars. Provide the other options through the visual editor and YAML: A (`stacked`, `.impeccable/mocks/system-battery-a.png`) and B (`compact`, `.impeccable/mocks/system-battery-b.png`); C is `columns`. Use the reported Omnibattery system SOC, stored energy, and capacity. Each discovered battery remains independently visible; unknown charge is unavailable, never zero. Long device names wrap. All interactions inspect sensor details. Do not add power, temperature, health, or control features to this compact card.
 
 ## Direction contract
 THESIS: The day's energy story and present battery behavior stay readable at a glance.

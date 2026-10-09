@@ -1,12 +1,13 @@
 # Omnibattery Cards
 
-Four compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
+Five compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
 
 | Card | What it shows |
 | --- | --- |
 | **Energy plan** | Solar, consumption, charge level, battery activity, and optional prices on a shared timeline. Measured values and forecasts remain distinct. |
 | **Overview** | Live energy flow, battery charge level, operating status, and today's energy totals. |
 | **Battery** | One battery's charge level, stored energy, AC and cell power, temperature, daily totals, and available health metrics. |
+| **System battery** | System charge level and stored energy, with a charge bar for every discovered battery. Three layout variants are available. |
 | **Status** | Charging and discharging blockers, predictive charging, reserves, connectivity, alarms, protections, and timeline freshness. |
 
 Cards follow the active Home Assistant theme. They can open entity details, but contain no battery-control buttons and make no service calls. There are no external runtime assets or dependencies on other custom cards.
@@ -64,16 +65,39 @@ battery: YOUR_HOME_ASSISTANT_DEVICE_ID
 
 Select a battery in the visual editor to fill its device ID. Repeat the Battery card for each device. The ID is a Home Assistant device-registry ID, not an entity ID, IP address, or battery name.
 
+### System battery layouts
+
+<img src="docs/screenshots/system-battery-light.png" alt="System battery card in the default three-column layout, light theme" width="366" /> <img src="docs/screenshots/system-battery-dark.png" alt="System battery card in the default three-column layout, dark theme" width="366" />
+
+The System battery card shows the installation's reported charge level and stored energy, followed by all discovered battery charge bars. It uses Omnibattery's reported system charge level rather than calculating an average of the batteries. Missing or unavailable readings remain unavailable.
+
+```yaml
+type: custom:omnibattery-system-battery-card
+title: System battery
+layout: columns
+```
+
+Choose **Layout** in the visual editor, or set `layout` in YAML:
+
+| Variant | `layout` | Arrangement |
+| --- | --- | --- |
+| **C — Three columns** | `columns` | Default. Shows up to three battery columns per row; additional batteries wrap onto the next row. |
+| **A — Familiar stack** | `stacked` | Places battery charge bars in a vertical stack below the system summary. |
+| **B — Compact rows** | `compact` | Uses compact battery rows below the system summary. |
+
+No single battery selection is needed: the card discovers every battery in the selected installation. Optional entity overrides are limited to `soc`, `stored`, and `capacity` for the system summary. See [all three layout examples](examples/system-battery.yaml).
+
 ### Common options
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `type` | string | Required | One of the four card types listed below. |
+| `type` | string | Required | One of the five card types listed below. |
 | `title` | string | Card title | An optional custom heading. |
 | `integration_id` | string | Automatic | Omnibattery config-entry ID. Select it in the editor if you have multiple installations. |
 | `entities` | mapping | Automatic | Override individual sources using the role names below. |
 | `grid_inverted` | boolean | Integration setting | Set `true` when your selected grid sensor is positive for export. |
 | `battery` | string | Automatic | Battery device ID for the Battery card. |
+| `layout` | string | `columns` | System battery layout: `columns` (C), `stacked` (A), or `compact` (B). |
 | `import_price_entity` | string | None | Optional timestamped import-price source for the Energy plan. |
 | `export_price_entity` | string | None | Optional explicit export-price source for the Energy plan. |
 | `show_extension` | boolean | `false` | Initially show available next-day timeline data on the Energy plan. The card also has a range selector. |
@@ -83,6 +107,7 @@ Card types:
 - `custom:omnibattery-plan-card`
 - `custom:omnibattery-overview-card`
 - `custom:omnibattery-battery-card`
+- `custom:omnibattery-system-battery-card`
 - `custom:omnibattery-status-card`
 
 ### Entity overrides
