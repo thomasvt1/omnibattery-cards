@@ -1,0 +1,363 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-09T12:21:57.7056249Z",
+  "title": "Design System: Omnibattery Cards",
+  "extensions": {
+    "colorMeta": {
+      "text": {
+        "displayName": "text",
+        "tonalRamp": [
+          "oklch(from var(--primary-text-color, #202530) 0.15 c h)",
+          "oklch(from var(--primary-text-color, #202530) 0.26 c h)",
+          "oklch(from var(--primary-text-color, #202530) 0.38 c h)",
+          "oklch(from var(--primary-text-color, #202530) 0.49 c h)",
+          "oklch(from var(--primary-text-color, #202530) 0.61 c h)",
+          "oklch(from var(--primary-text-color, #202530) 0.72 c h)",
+          "oklch(from var(--primary-text-color, #202530) 0.84 c h)",
+          "oklch(from var(--primary-text-color, #202530) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "neutral"
+      },
+      "secondary": {
+        "displayName": "secondary",
+        "tonalRamp": [
+          "oklch(from var(--secondary-text-color, #687080) 0.15 c h)",
+          "oklch(from var(--secondary-text-color, #687080) 0.26 c h)",
+          "oklch(from var(--secondary-text-color, #687080) 0.38 c h)",
+          "oklch(from var(--secondary-text-color, #687080) 0.49 c h)",
+          "oklch(from var(--secondary-text-color, #687080) 0.61 c h)",
+          "oklch(from var(--secondary-text-color, #687080) 0.72 c h)",
+          "oklch(from var(--secondary-text-color, #687080) 0.84 c h)",
+          "oklch(from var(--secondary-text-color, #687080) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "neutral"
+      },
+      "surface": {
+        "displayName": "surface",
+        "tonalRamp": [
+          "oklch(from var(--ha-card-background, var(--card-background-color, #fff)) 0.15 c h)",
+          "oklch(from var(--ha-card-background, var(--card-background-color, #fff)) 0.26 c h)",
+          "oklch(from var(--ha-card-background, var(--card-background-color, #fff)) 0.38 c h)",
+          "oklch(from var(--ha-card-background, var(--card-background-color, #fff)) 0.49 c h)",
+          "oklch(from var(--ha-card-background, var(--card-background-color, #fff)) 0.61 c h)",
+          "oklch(from var(--ha-card-background, var(--card-background-color, #fff)) 0.72 c h)",
+          "oklch(from var(--ha-card-background, var(--card-background-color, #fff)) 0.84 c h)",
+          "oklch(from var(--ha-card-background, var(--card-background-color, #fff)) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "neutral"
+      },
+      "subtle": {
+        "displayName": "subtle",
+        "tonalRamp": [
+          "oklch(from var(--secondary-background-color, #f3f5f8) 0.15 c h)",
+          "oklch(from var(--secondary-background-color, #f3f5f8) 0.26 c h)",
+          "oklch(from var(--secondary-background-color, #f3f5f8) 0.38 c h)",
+          "oklch(from var(--secondary-background-color, #f3f5f8) 0.49 c h)",
+          "oklch(from var(--secondary-background-color, #f3f5f8) 0.61 c h)",
+          "oklch(from var(--secondary-background-color, #f3f5f8) 0.72 c h)",
+          "oklch(from var(--secondary-background-color, #f3f5f8) 0.84 c h)",
+          "oklch(from var(--secondary-background-color, #f3f5f8) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "neutral"
+      },
+      "divider": {
+        "displayName": "divider",
+        "tonalRamp": [
+          "oklch(from var(--divider-color, #e2e5eb) 0.15 c h)",
+          "oklch(from var(--divider-color, #e2e5eb) 0.26 c h)",
+          "oklch(from var(--divider-color, #e2e5eb) 0.38 c h)",
+          "oklch(from var(--divider-color, #e2e5eb) 0.49 c h)",
+          "oklch(from var(--divider-color, #e2e5eb) 0.61 c h)",
+          "oklch(from var(--divider-color, #e2e5eb) 0.72 c h)",
+          "oklch(from var(--divider-color, #e2e5eb) 0.84 c h)",
+          "oklch(from var(--divider-color, #e2e5eb) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "neutral"
+      },
+      "interaction": {
+        "displayName": "interaction",
+        "tonalRamp": [
+          "oklch(from var(--primary-color, #03a9f4) 0.15 c h)",
+          "oklch(from var(--primary-color, #03a9f4) 0.26 c h)",
+          "oklch(from var(--primary-color, #03a9f4) 0.38 c h)",
+          "oklch(from var(--primary-color, #03a9f4) 0.49 c h)",
+          "oklch(from var(--primary-color, #03a9f4) 0.61 c h)",
+          "oklch(from var(--primary-color, #03a9f4) 0.72 c h)",
+          "oklch(from var(--primary-color, #03a9f4) 0.84 c h)",
+          "oklch(from var(--primary-color, #03a9f4) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "primary"
+      },
+      "solar": {
+        "displayName": "solar",
+        "tonalRamp": [
+          "oklch(from var(--energy-solar-color, #f5a900) 0.15 c h)",
+          "oklch(from var(--energy-solar-color, #f5a900) 0.26 c h)",
+          "oklch(from var(--energy-solar-color, #f5a900) 0.38 c h)",
+          "oklch(from var(--energy-solar-color, #f5a900) 0.49 c h)",
+          "oklch(from var(--energy-solar-color, #f5a900) 0.61 c h)",
+          "oklch(from var(--energy-solar-color, #f5a900) 0.72 c h)",
+          "oklch(from var(--energy-solar-color, #f5a900) 0.84 c h)",
+          "oklch(from var(--energy-solar-color, #f5a900) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "secondary"
+      },
+      "home": {
+        "displayName": "home",
+        "tonalRamp": [
+          "oklch(from var(--primary-text-color, #646b78) 0.15 c h)",
+          "oklch(from var(--primary-text-color, #646b78) 0.26 c h)",
+          "oklch(from var(--primary-text-color, #646b78) 0.38 c h)",
+          "oklch(from var(--primary-text-color, #646b78) 0.49 c h)",
+          "oklch(from var(--primary-text-color, #646b78) 0.61 c h)",
+          "oklch(from var(--primary-text-color, #646b78) 0.72 c h)",
+          "oklch(from var(--primary-text-color, #646b78) 0.84 c h)",
+          "oklch(from var(--primary-text-color, #646b78) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "neutral"
+      },
+      "grid": {
+        "displayName": "grid",
+        "tonalRamp": [
+          "oklch(from var(--energy-grid-consumption-color, #2196f3) 0.15 c h)",
+          "oklch(from var(--energy-grid-consumption-color, #2196f3) 0.26 c h)",
+          "oklch(from var(--energy-grid-consumption-color, #2196f3) 0.38 c h)",
+          "oklch(from var(--energy-grid-consumption-color, #2196f3) 0.49 c h)",
+          "oklch(from var(--energy-grid-consumption-color, #2196f3) 0.61 c h)",
+          "oklch(from var(--energy-grid-consumption-color, #2196f3) 0.72 c h)",
+          "oklch(from var(--energy-grid-consumption-color, #2196f3) 0.84 c h)",
+          "oklch(from var(--energy-grid-consumption-color, #2196f3) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "secondary"
+      },
+      "battery": {
+        "displayName": "battery",
+        "tonalRamp": [
+          "oklch(from var(--energy-battery-out-color, #00a99a) 0.15 c h)",
+          "oklch(from var(--energy-battery-out-color, #00a99a) 0.26 c h)",
+          "oklch(from var(--energy-battery-out-color, #00a99a) 0.38 c h)",
+          "oklch(from var(--energy-battery-out-color, #00a99a) 0.49 c h)",
+          "oklch(from var(--energy-battery-out-color, #00a99a) 0.61 c h)",
+          "oklch(from var(--energy-battery-out-color, #00a99a) 0.72 c h)",
+          "oklch(from var(--energy-battery-out-color, #00a99a) 0.84 c h)",
+          "oklch(from var(--energy-battery-out-color, #00a99a) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "primary"
+      },
+      "charge-level": {
+        "displayName": "charge level",
+        "tonalRamp": [
+          "oklch(from #e84988 0.15 c h)",
+          "oklch(from #e84988 0.26 c h)",
+          "oklch(from #e84988 0.38 c h)",
+          "oklch(from #e84988 0.49 c h)",
+          "oklch(from #e84988 0.61 c h)",
+          "oklch(from #e84988 0.72 c h)",
+          "oklch(from #e84988 0.84 c h)",
+          "oklch(from #e84988 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "tertiary"
+      },
+      "price": {
+        "displayName": "price",
+        "tonalRamp": [
+          "oklch(from #9965e8 0.15 c h)",
+          "oklch(from #9965e8 0.26 c h)",
+          "oklch(from #9965e8 0.38 c h)",
+          "oklch(from #9965e8 0.49 c h)",
+          "oklch(from #9965e8 0.61 c h)",
+          "oklch(from #9965e8 0.72 c h)",
+          "oklch(from #9965e8 0.84 c h)",
+          "oklch(from #9965e8 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "tertiary"
+      },
+      "warning": {
+        "displayName": "warning",
+        "tonalRamp": [
+          "oklch(from var(--warning-color, #a86b00) 0.15 c h)",
+          "oklch(from var(--warning-color, #a86b00) 0.26 c h)",
+          "oklch(from var(--warning-color, #a86b00) 0.38 c h)",
+          "oklch(from var(--warning-color, #a86b00) 0.49 c h)",
+          "oklch(from var(--warning-color, #a86b00) 0.61 c h)",
+          "oklch(from var(--warning-color, #a86b00) 0.72 c h)",
+          "oklch(from var(--warning-color, #a86b00) 0.84 c h)",
+          "oklch(from var(--warning-color, #a86b00) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "tertiary"
+      },
+      "error": {
+        "displayName": "error",
+        "tonalRamp": [
+          "oklch(from var(--error-color, #d32f2f) 0.15 c h)",
+          "oklch(from var(--error-color, #d32f2f) 0.26 c h)",
+          "oklch(from var(--error-color, #d32f2f) 0.38 c h)",
+          "oklch(from var(--error-color, #d32f2f) 0.49 c h)",
+          "oklch(from var(--error-color, #d32f2f) 0.61 c h)",
+          "oklch(from var(--error-color, #d32f2f) 0.72 c h)",
+          "oklch(from var(--error-color, #d32f2f) 0.84 c h)",
+          "oklch(from var(--error-color, #d32f2f) 0.95 c h)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; not a shipped token scale.",
+        "role": "tertiary"
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Card title",
+        "purpose": "Native Home Assistant card headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Inherited card text and form copy."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Small headings such as Today."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Captions and metric descriptions."
+      },
+      "compact-label": {
+        "displayName": "Compact label",
+        "purpose": "Plots, legends, and narrow-card labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-flat",
+        "value": "none",
+        "purpose": "Shared ha-card explicitly suppresses shadow; borders and tonal fills provide structure."
+      }
+    ],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "card-compact-container",
+        "value": "450px"
+      },
+      {
+        "name": "card-narrow-container",
+        "value": "350px"
+      },
+      {
+        "name": "shared-padding-viewport",
+        "value": "450px"
+      },
+      {
+        "name": "demo-two-columns-viewport",
+        "value": "1000px"
+      },
+      {
+        "name": "demo-stack-viewport",
+        "value": "650px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Metric inspection",
+      "kind": "button",
+      "refersTo": "metric-button",
+      "description": "Quiet sensor-detail action; example reading is synthetic.",
+      "html": "<button class=\"ds-metric\">240 W</button>",
+      "css": ".ds-metric{font:inherit;color:var(--primary-text-color,#202530);appearance:none;padding:0;border:0;background:transparent;text-align:inherit;border-radius:3px;cursor:pointer;font-variant-numeric:tabular-nums}.ds-metric:hover{color:var(--primary-color,#03a9f4)}.ds-metric:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:3px}.ds-metric:disabled{cursor:default;opacity:.65}"
+    },
+    {
+      "name": "Time range",
+      "kind": "nav",
+      "description": "Plan range navigation with the shipped pressed and focus states; no separate hover declaration exists.",
+      "html": "<div class=\"ds-range\" aria-label=\"Plan range\"><button aria-pressed=\"true\">Today</button><button aria-pressed=\"false\">Extended</button></div>",
+      "css": ".ds-range{display:flex;gap:2px;padding:3px;background:var(--secondary-background-color,#f3f5f8);border-radius:8px;width:max-content}.ds-range button{font:inherit;color:var(--primary-text-color,#202530);cursor:pointer;border:0;background:transparent;padding:5px 9px;border-radius:5px;font-size:12px}.ds-range button[aria-pressed=true]{background:var(--ha-card-background,var(--card-background-color,#fff));color:var(--primary-color,#0288d1)}.ds-range button:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:3px}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Theme-native, flat, content-sized card shell.",
+      "html": "<section class=\"ds-card\"><h2>Overview</h2><p>Live power</p></section>",
+      "css": ".ds-card{font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif));font-size:14px;line-height:1.45;color:var(--primary-text-color,#202530);padding:20px;border:var(--ha-card-border-width,1px) solid var(--ha-card-border-color,var(--divider-color,#e2e5eb));border-radius:var(--ha-card-border-radius,12px);background:var(--ha-card-background,var(--card-background-color,#fff));box-shadow:none;overflow:hidden}.ds-card h2{margin:0;font-size:18px;line-height:1.3;font-weight:600;letter-spacing:-.2px;overflow-wrap:anywhere}.ds-card p{color:var(--secondary-text-color,#687080);font-size:12px}@media(max-width:450px){.ds-card{padding:16px}.ds-card h2{font-size:17px}}"
+    },
+    {
+      "name": "Editor field",
+      "kind": "input",
+      "refersTo": "editor-field",
+      "description": "Native configuration field with visible focus and a 44px minimum height.",
+      "html": "<label class=\"ds-field\"><span>Title</span><input placeholder=\"Default card title\"></label>",
+      "css": ".ds-field{display:grid;gap:7px;font-size:14px;min-width:0;color:var(--primary-text-color,#202523);font-family:var(--paper-font-body1_-_font-family,inherit)}.ds-field>span{font-weight:500}.ds-field input{box-sizing:border-box;width:100%;min-height:44px;min-width:0;border:1px solid var(--divider-color,#d4dcd6);border-radius:8px;padding:10px 12px;color:var(--primary-text-color,#202523);background:var(--card-background-color,#fff);font:inherit}.ds-field input:focus-visible{outline:2px solid var(--primary-color,#327965);outline-offset:2px}"
+    },
+    {
+      "name": "Notice",
+      "kind": "custom",
+      "refersTo": "notice",
+      "description": "Restrained explanatory notice inside a card.",
+      "html": "<div class=\"ds-notice\">Readings are unavailable.</div>",
+      "css": ".ds-notice{font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Arial,sans-serif));font-size:13px;line-height:1.45;color:var(--secondary-text-color,#687080);padding:12px;border-radius:8px;background:var(--secondary-background-color,#f3f5f8);margin:0 0 14px}.ds-notice.ds-error{color:var(--error-color,#d32f2f)}"
+    },
+    {
+      "name": "Status inspection row",
+      "kind": "button",
+      "description": "Text-led sensor status with a tinted inline SVG disc; example copy is synthetic.",
+      "html": "<button class=\"ds-status\"><span class=\"ds-disc\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m7 12 3 3 7-7\"/></svg></span><span class=\"ds-copy\"><span class=\"ds-title\">Connected</span><span class=\"ds-detail\">Readings available</span></span></button>",
+      "css": ".ds-status{display:flex;align-items:flex-start;gap:12px;width:100%;padding:11px 0;color:var(--primary-text-color,#17202c);text-align:left;font:inherit;border:0;border-radius:5px;background:transparent;cursor:pointer}.ds-status:hover .ds-title{text-decoration:underline;text-underline-offset:3px}.ds-status:focus-visible{outline:2px solid var(--primary-color,#03a9f4);outline-offset:3px}.ds-disc{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;color:var(--energy-battery-out-color,#00a99a);background:color-mix(in srgb,var(--energy-battery-out-color,#00a99a) 10%,transparent)}.ds-disc svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.ds-copy{display:flex;flex-direction:column;gap:2px;align-self:center;min-width:0;padding:1px 0}.ds-title{font-size:13px;line-height:1.5;overflow-wrap:anywhere}.ds-detail{font-size:12px;line-height:1.5;color:var(--secondary-text-color,#646b75);overflow-wrap:anywhere}"
+    }
+  ],
+  "narrative": {
+    "dos": [
+      "**Do** inherit Home Assistant fonts, theme surfaces, energy colors, locale, and units.",
+      "**Do** keep measured and projected data visually distinct and preserve missing-data gaps.",
+      "**Do** size cards to content and use their container width to adapt dense readings.",
+      "**Do** use inline SVG icons, visible focus, and textual status explanations."
+    ],
+    "donts": [
+      "**Don't** turn demo readings, theme samples, or page composition into mandatory host-dashboard values.",
+      "**Don't** equate missing telemetry with zero or draw unsupported activity and savings.",
+      "**Don't** introduce battery-control affordances into this display-only card collection.",
+      "**Don't** hide available chart rows to obtain a shorter mobile card."
+    ],
+    "overview": "Compact energy instruments belong inside the user's Home Assistant dashboard. The approved world uses native Home Assistant typography, restrained light and dark surfaces, thin dividers, and colored SVG energy plots. Density comes from aligned information and short labels, with content determining card height.\n\nThe system makes present readings, measured history, projections, and unavailable information distinguishable. Theme inheritance is part of the identity: the demo's explicit light and dark palettes demonstrate the cards, but do not replace the host theme contract.",
+    "northStar": "EMHASS Companion card language",
+    "keyCharacteristics": [
+      "Theme-native surfaces and typography.",
+      "Stable energy colors across plots and flow nodes.",
+      "Compact readings with tabular numerals.",
+      "Flat, content-sized cards with inspection on demand."
+    ],
+    "rules": [
+      {
+        "name": "The Energy Identity Rule",
+        "section": "colors",
+        "body": "Keep each energy role's color consistent across charts, activity rows, and live flow nodes."
+      },
+      {
+        "name": "The Host Theme Rule",
+        "section": "colors",
+        "body": "Resolve host theme variables before fallback values; do not freeze the demo palette into cards."
+      },
+      {
+        "name": "The Reading Alignment Rule",
+        "section": "typography",
+        "body": "Use tabular numerals and baseline alignment for comparable readings, retaining the unit beside its value."
+      },
+      {
+        "name": "The Flat Instrument Rule",
+        "section": "elevation",
+        "body": "Use borders and tonal separation for card structure; keep readings and charts visually in the foreground."
+      }
+    ]
+  }
+}

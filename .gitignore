@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.impeccable/mocks/
+.impeccable/build/
+.impeccable/review/
+.impeccable/config.local.json
+.local/
+*.log

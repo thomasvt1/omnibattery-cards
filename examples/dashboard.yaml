@@ -1,0 +1,34 @@
+# Add cards individually in the visual editor, or use this as a dashboard view.
+# Use each card's editor to select your installation and battery devices.
+# Entity overrides and price sources are optional; replace placeholders before use.
+title: Energy
+views:
+  - title: Omnibattery
+    path: omnibattery
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        column_span: 3
+        cards:
+          - type: custom:omnibattery-plan-card
+            title: Energy plan
+            show_extension: true
+            grid_options:
+              columns: full
+              rows: auto
+            # import_price_entity: sensor.your_import_price
+            # export_price_entity: sensor.your_export_price
+      - type: grid
+        cards:
+          - type: custom:omnibattery-overview-card
+            title: Energy overview
+      - type: grid
+        cards:
+          - type: custom:omnibattery-battery-card
+            # Select a battery in the visual editor.
+            # battery: YOUR_HOME_ASSISTANT_DEVICE_ID
+      - type: grid
+        cards:
+          - type: custom:omnibattery-status-card
+            title: System status
