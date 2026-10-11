@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Hide retained import/export tariffs when their source is unavailable or unknown, and reject prior-day timelines in Forecast accuracy using the timeline timezone.
+
 - Add Energy today with horizontal daily-energy bars, a shared kWh scale, sensor detail links, and optional remaining-forecast rows.
 
 - Add Solar independence, Price windows, and Forecast accuracy cards with visual editors and light/dark previews.
