@@ -2,7 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/thomasvt1/omnibattery-cards/main/icon.png" alt="Omnibattery Cards: a teal battery with stacked energy dashboard cards" width="128" height="128" />
 
-Five compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
+Nine compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
 
 | Card | What it shows |
 | --- | --- |
@@ -10,6 +10,10 @@ Five compact, display-only Home Assistant dashboard cards for [Omnibattery](http
 | **Overview** | Live energy flow, battery charge level, operating status, and today's energy totals. |
 | **Battery** | One battery's charge level, stored energy, AC and cell power, temperature, daily totals, and available health metrics. |
 | **System battery** | System charge level and stored energy, with a charge bar for every discovered battery. Three layout variants are available. |
+| **Energy today** | Daily energy totals and remaining forecasts as comparable horizontal bars. |
+| **Solar independence** | Daily self-sufficiency, grid import/export, and solar retention with explicit attribution assumptions. |
+| **Price windows** | Current import tariff and lowest/highest upcoming two-hour windows. |
+| **Forecast accuracy** | Measured solar or consumption compared with an earlier saved forecast. |
 | **Status** | Charging and discharging blockers, predictive charging, reserves, connectivity, alarms, protections, and timeline freshness. |
 
 Cards follow the active Home Assistant theme. They can open entity details, but contain no battery-control buttons and make no service calls. There are no external runtime assets or dependencies on other custom cards.
@@ -27,6 +31,17 @@ Cards follow the active Home Assistant theme. They can open entity details, but 
 | Battery | ![Battery, light](examples/battery-light.png) | ![Battery, dark](examples/battery-dark.png) |
 | System battery | ![System battery, light](examples/system-battery-columns-light.png) | ![System battery, dark](examples/system-battery-columns-dark.png) |
 | Status | ![Status, light](examples/status-light.png) | ![Status, dark](examples/status-dark.png) |
+
+### New insight cards
+
+![New cards rendered from the production bundle](examples/new-cards-preview.png)
+
+| Card | Light theme | Dark theme |
+| --- | --- | --- |
+| Energy today | ![Energy today, light](examples/energy-today-light.png) | ![Energy today, dark](examples/energy-today-dark.png) |
+| Solar independence | ![Solar independence, light](examples/solar-independence-light.png) | ![Solar independence, dark](examples/solar-independence-dark.png) |
+| Price windows | ![Price windows, light](examples/price-windows-light.png) | ![Price windows, dark](examples/price-windows-dark.png) |
+| Forecast accuracy | ![Forecast accuracy, light](examples/forecast-accuracy-light.png) | ![Forecast accuracy, dark](examples/forecast-accuracy-dark.png) |
 
 ## Requirements
 
@@ -103,11 +118,71 @@ Choose **Layout** in the visual editor, or set `layout` in YAML:
 
 No single battery selection is needed: the card discovers every battery in the selected installation. Optional entity overrides are limited to `soc`, `stored`, and `capacity` for the system summary. See [all three layout examples](examples/system-battery.yaml).
 
+### Energy today
+
+```yaml
+type: custom:omnibattery-energy-today-card
+show_forecasts: true # default; false hides the two forecast rows
+```
+
+Horizontal bars show Charged, Discharged, Solar, Home, Grid imported, and Grid exported. Every row uses the same kWh scale, set by the largest visible value. These are comparisons, not percentages of a shared total. Tap a measured value to open its sensor details.
+
+The optional forecast rows show **Solar remaining** and **Expected consumption** (home energy so far plus remaining consumption forecast). They use today's schema 1 timeline only, including the remaining portion of the current interval and excluding tomorrow. Forecast energy is taken directly from the integration's interval energy, so partial and DST intervals are not counted twice. Forecast rows use lighter fills and explicit labels.
+
+Missing, stale, previous-day, or incomplete forecast data stays unavailable. A known zero remains an empty bar labeled zero; unavailable data uses an em dash and dashed track. Forecasts can be hidden in the editor. Entity overrides include `dailyCharge`, `dailyDischarge`, `dailySolar`, `dailyHome`, `dailyGridImport`, `dailyGridExport`, and `timeline`.
+
+### Solar independence
+
+```yaml
+type: custom:omnibattery-solar-independence-card
+entities:
+  dailyGridToHome: sensor.grid_to_home_energy_today
+assume_solar_only_export: true
+```
+
+Self-sufficiency is `(home energy − grid-to-home energy) / home energy`. Supply a daily `dailyGridToHome` counter in Wh/kWh that excludes battery charging. If the installation never charges batteries from the grid, `assume_no_grid_charging: true` explicitly permits using daily grid import instead. Both assumptions default to false; unavailable or inconsistent counters show an em dash. All daily counters must cover the same period and reset together. This metric describes direct grid reliance today, not the historical origin of stored battery energy.
+
+Solar retention is `(solar generation − grid export) / solar generation` and requires `assume_solar_only_export: true`. Leave it disabled when exported energy can come from grid-charged batteries. Retained energy includes battery storage and losses, not just household consumption.
+
+### Price windows
+
+```yaml
+type: custom:omnibattery-price-windows-card
+import_price_entity: sensor.your_import_price
+```
+
+Shows today's tariff chart and the cheapest/most expensive complete upcoming two-hour windows in published today/tomorrow data. Window averages are duration-weighted; windows may start now or at a tariff boundary (including two hours before an ending boundary). Gaps and overlaps disqualify a window. Negative prices, source units, and timezone-aware physical durations are preserved. Windows are information only, not battery schedules. The current price is taken from the timestamped interval, not an unrelated sensor state.
+
+### Forecast accuracy
+
+```yaml
+type: custom:omnibattery-forecast-accuracy-card
+saved_forecast_entity: sensor.saved_energy_forecast
+forecast_metric: solar # solar (default) or home
+```
+
+Omnibattery's current timeline does not retain the earlier forecast needed for this comparison. Provide a separately persisted sensor with a frozen snapshot; the card does not create helpers, capture snapshots, or make service calls. The visual editor exposes this input. Without it, the card explains what is missing.
+
+The sensor must have an available state and these attributes (example timestamps must be replaced with the actual forecast day):
+
+```yaml
+schema_version: 1
+saved_at: '2026-06-15T06:00:00+00:00'
+intervals:
+  - start: '2026-06-15T06:00:00+00:00'
+    end: '2026-06-15T06:15:00+00:00'
+    solar_kwh: 0.12
+    consumption_kwh: 0.18
+  # Continue with timestamped quarter-hour intervals for the forecast horizon.
+```
+
+Each interval must match an actual timeline interval exactly, and the snapshot must have been saved at or before that interval began. Only complete per-source measurement coverage is compared. Missing, duplicated, partial, future, and repeated DST wall-clock intervals are excluded; chart gaps remain visible. Totals cover the matched intervals only, with the count shown below the chart. The signed difference is measured minus forecast, not a percentage accuracy score.
+
 ### Common options
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `type` | string | Required | One of the five card types listed below. |
+| `type` | string | Required | One of the nine card types listed below. |
 | `title` | string | Card title | An optional custom heading. |
 | `integration_id` | string | Automatic | Omnibattery config-entry ID. Select it in the editor if you have multiple installations. |
 | `entities` | mapping | Automatic | Override individual sources using the role names below. |
@@ -125,6 +200,10 @@ Card types:
 - `custom:omnibattery-battery-card`
 - `custom:omnibattery-system-battery-card`
 - `custom:omnibattery-status-card`
+- `custom:omnibattery-energy-today-card`
+- `custom:omnibattery-solar-independence-card`
+- `custom:omnibattery-price-windows-card`
+- `custom:omnibattery-forecast-accuracy-card`
 
 ### Entity overrides
 
@@ -185,6 +264,7 @@ npm run build
 npx playwright install chromium
 npm run test:browser
 npm run update:examples
+npm run validate:previews
 ```
 
 The build produces one self-contained `dist/omnibattery-cards.js`. Demo fixtures use synthetic names and data; do not commit household identifiers, private Home Assistant URLs, credentials, or raw diagnostics.

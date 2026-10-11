@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "check": "tsc --noEmit",
     "test:browser": "playwright test",
-    "update:examples": "node scripts/update-examples.mjs"
+    "update:examples": "node scripts/update-examples.mjs",
+    "validate:previews": "npm run build && node scripts/validate-insight-previews.mjs"
   },
   "dependencies": {
     "lit": "^3.3.3"

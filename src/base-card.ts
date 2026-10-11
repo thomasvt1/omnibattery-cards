@@ -39,7 +39,7 @@ export abstract class BaseCard extends LitElement {
       this.cached = buildSnapshot(this.hass, this.registry, this.config, new Date());
       this.trackedIds = new Set(this.registry.entities.filter(e => ['omnibattery', 'marstek_venus'].includes(e.platform || '')).map(e => e.entity_id));
       for (const e of Object.values(this.config?.entities || {})) this.trackedIds.add(e);
-      for (const id of [this.config?.import_price_entity, this.config?.export_price_entity]) if (id) this.trackedIds.add(id);
+      for (const id of [this.config?.import_price_entity, this.config?.export_price_entity, this.config?.saved_forecast_entity]) if (id) this.trackedIds.add(id);
       const visit = (v: unknown): void => {
         if (!v || typeof v !== 'object') return;
         for (const [key, val] of Object.entries(v)) {
