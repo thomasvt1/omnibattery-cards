@@ -38,6 +38,14 @@ export function forecastAccuracy(entity: HassEntity | undefined, timeline: Timel
   if (data.schema_version !== 1 || !Number.isFinite(savedAt) || savedAt > now)
     return { ...result, error: 'Saved forecast requires schema 1 and a valid saved_at timestamp.' };
   if (!timeline.available) return { ...result, error: timeline.error ?? 'Timeline unavailable.' };
+  let today: string;
+  try {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+      timeZone: timeline.timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+    }).formatToParts(now).map(part => [part.type, part.value]));
+    today = `${parts.year}-${parts.month}-${parts.day}`;
+  } catch { return { ...result, error: 'The timeline time zone is invalid.' }; }
+  if (timeline.localDate !== today) return { ...result, error: 'Today’s timeline is not available yet.' };
   result.savedAt = savedAt;
   const forecasts = list(data.intervals).map(raw => {
     const p = record(raw);

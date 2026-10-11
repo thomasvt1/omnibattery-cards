@@ -55,3 +55,52 @@ test('saved forecast updates invalidate the card and missing installations do no
   await page.evaluate(()=>window.demo.setScenario('missing'));
   for(const name of names)await expect(page.locator(`omnibattery-${name}-card .hero`)).toHaveText('—');
 });
+
+for(const state of ['unavailable','unknown'])test(`retained tariffs disappear when the source becomes ${state} and recover`,async({page})=>{
+  await page.clock.setFixedTime(new Date('2026-06-15T14:00:00Z'));
+  await page.goto('/');
+  const price=page.locator('omnibattery-price-windows-card');
+  const plan=page.locator('omnibattery-plan-card');
+  await page.evaluate(()=>window.demo.setConfig('plan',{export_price_entity:'sensor.demo_import_price'}));
+  await expect(price.locator('.chart')).toBeVisible();
+  await expect(price.locator('.window-values strong')).toHaveCount(2);
+  for(const nextState of [state,'0.19']){
+    await page.evaluate(nextState=>{
+      for(const selector of ['omnibattery-price-windows-card','omnibattery-plan-card']){
+        const card=document.querySelector(selector) as HTMLElement & {hass:HomeAssistant};
+        const old=card.hass.states['sensor.demo_import_price'];
+        card.hass={...card.hass,states:{...card.hass.states,[old.entity_id]:{...old,state:nextState}}};
+      }
+    },nextState);
+    if(nextState===state){
+      await expect(price.locator('.hero')).toHaveText('—');
+      await expect(price.locator('.chart')).toHaveCount(0);
+      await expect(price.locator('.window-values strong')).toHaveCount(0);
+      await expect(plan.locator('.legend').getByText('Import price',{exact:true})).toHaveCount(0);
+      await expect(plan.locator('.legend').getByText('Export price',{exact:true})).toHaveCount(0);
+    }else{
+      await expect(price.locator('.hero')).not.toHaveText('—');
+      await expect(price.locator('.chart')).toBeVisible();
+      await expect(price.locator('.window-values strong')).toHaveCount(2);
+      await expect(plan.locator('.legend').getByText('Import price',{exact:true})).toBeVisible();
+      await expect(plan.locator('.legend').getByText('Export price',{exact:true})).toBeVisible();
+    }
+  }
+});
+
+test('accuracy stops labeling retained yesterday data as today at midnight and recovers',async({page})=>{
+  await page.clock.install({time:new Date('2026-06-15T23:59:30Z')});
+  await page.goto('/');
+  const card=page.locator('omnibattery-forecast-accuracy-card');
+  await expect(card.locator('.stats')).toBeVisible();
+  // No entity update: the card's periodic refresh must catch midnight itself.
+  await page.clock.fastForward(60000);
+  await expect(card.getByRole('status')).toHaveText('Today’s timeline is not available yet.');
+  await expect(card.locator('.hero')).toHaveText('—');
+  await expect(card.locator('.stats')).toHaveCount(0);
+  await expect(card.locator('.chart')).toHaveCount(0);
+  await page.clock.setFixedTime(new Date('2026-06-16T14:00:00Z'));
+  await page.evaluate(()=>window.demo.setScenario('solar'));
+  await expect(card.locator('.stats')).toBeVisible();
+  await expect(card.getByRole('status')).toHaveCount(0);
+});

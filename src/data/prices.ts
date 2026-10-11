@@ -1,9 +1,9 @@
 import type { HassEntity, PriceSeries } from '../types';
-import { list, number, record, text } from './values';
+import { available, list, number, record, text } from './values';
 
 /** Nord Pool timestamps define the price periods (including DST and sub-hourly data). */
 export function parsePrices(entity?: HassEntity, fallbackCurrency = ''): PriceSeries | undefined {
-  if (!entity) return undefined;
+  if (!available(entity)) return undefined;
   const seen = new Set<string>();
   const points: PriceSeries['points'] = [];
   for (const raw of [...list(entity.attributes.raw_today), ...list(entity.attributes.raw_tomorrow)]) {

@@ -176,7 +176,7 @@ intervals:
   # Continue with timestamped quarter-hour intervals for the forecast horizon.
 ```
 
-Each interval must match an actual timeline interval exactly, and the snapshot must have been saved at or before that interval began. Only complete per-source measurement coverage is compared. Missing, duplicated, partial, future, and repeated DST wall-clock intervals are excluded; chart gaps remain visible. Totals cover the matched intervals only, with the count shown below the chart. The signed difference is measured minus forecast, not a percentage accuracy score.
+The timeline must belong to today in its reported timezone; prior-day data is withheld after local midnight. Each interval must match an actual timeline interval exactly, and the snapshot must have been saved at or before that interval began. Only complete per-source measurement coverage is compared. Missing, duplicated, partial, future, and repeated DST wall-clock intervals are excluded; chart gaps remain visible. Totals cover the matched intervals only, with the count shown below the chart. The signed difference is measured minus forecast, not a percentage accuracy score.
 
 ### Common options
 
@@ -234,7 +234,7 @@ AC exchange and battery-cell power are different measurements. Solar charging ca
 
 ### Prices and timeline
 
-Price sensors must supply arrays of `{start, end, value}` objects in `raw_today` and, when available, `raw_tomorrow`. Start and end values are timestamps with timezone information. Negative prices are preserved. Missing tomorrow prices stay missing; export prices are displayed only when explicitly configured.
+Price sensors must supply arrays of `{start, end, value}` objects in `raw_today` and, when available, `raw_tomorrow`. Start and end values are timestamps with timezone information. Negative prices are preserved. Unavailable or unknown price entities are ignored even if they retain tariff attributes. Missing tomorrow prices stay missing; export prices are displayed only when explicitly configured.
 
 The timeline reads Omnibattery's schema 1 data, including its next-day extension. Its power values are interval averages derived from energy and measured coverage, rather than instantaneous readings. Measured history remains separate from projections; gaps, partial intervals, and daylight-saving changes are preserved. Turning predictive charging off does not remove available profile forecasts.
 

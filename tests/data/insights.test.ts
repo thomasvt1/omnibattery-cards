@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { retainedShare, priceWindows, forecastAccuracy } from '../../src/data/insights';
 import { createDemo } from '../../src/demo/fixtures';
+import { parsePrices } from '../../src/data/prices';
 import { parseTimeline } from '../../src/data/timeline';
 import type { PriceSeries } from '../../src/types';
 
@@ -14,6 +15,16 @@ describe('daily independence',()=>{
   });
 });
 describe('price windows',()=>{
+  it.each(['unavailable','unknown','none',''])('rejects retained tariffs when the source state is %s',state=>{
+    const {hass}=createDemo('solar',new Date(start+12*hour));
+    const source=hass.states['sensor.demo_import_price'];
+    expect(parsePrices(source)?.points.length).toBeGreaterThan(0);
+    const unavailable={...source,state};
+    expect(unavailable.attributes.raw_today).toBe(source.attributes.raw_today);
+    const result=priceWindows(parsePrices(unavailable),start+12*hour);
+    expect(result).toEqual({current:null,low:undefined,high:undefined});
+    expect(priceWindows(parsePrices(source),start+12*hour).current).not.toBeNull();
+  });
   it('weights partial periods, preserves negative prices and excludes past windows',()=>{
     const result=priceWindows(prices([9,0.2,-0.2,-0.1,0.5]),start+hour/2);
     expect(result.current).toBe(9);
@@ -52,6 +63,26 @@ describe('saved forecast accuracy',()=>{
     const result=forecastAccuracy(entity,timeline,'solar',+now);
     expect(result.points).toHaveLength(47);
     expect(result.points[0].start).toBe(start+3*900000);
+  });
+  it.each([
+    ['UTC','2026-06-15T23:59:59Z','2026-06-16T00:00:00Z'],
+    ['Europe/Amsterdam','2026-06-15T21:59:59Z','2026-06-15T22:00:00Z'],
+    ['America/Los_Angeles','2026-06-16T06:59:59Z','2026-06-16T07:00:00Z'],
+  ])('rejects yesterday only after local midnight in %s',(zone,before,after)=>{
+    const {entity,timeline}=setup();
+    timeline.timeZone=zone;
+    // These completed intervals fall on June 15 in every tested zone.
+    timeline.slots=timeline.slots.filter(slot=>Date.parse(slot.start??'')>=Date.parse('2026-06-15T12:00:00Z')&&Date.parse(slot.end??'')<=+now);
+    expect(forecastAccuracy(entity,timeline,'solar',Date.parse(before)).points).toHaveLength(2);
+    for(const metric of ['solar','home'] as const){
+      const result=forecastAccuracy(entity,timeline,metric,Date.parse(after));
+      expect(result.points).toHaveLength(0);
+      expect(result.error).toBe('Today’s timeline is not available yet.');
+    }
+  });
+  it('reports an invalid timeline timezone without throwing',()=>{
+    const {entity,timeline}=setup();timeline.timeZone='Invalid/Zone';
+    expect(forecastAccuracy(entity,timeline,'solar',+now).error).toBe('The timeline time zone is invalid.');
   });
   it('reports unavailable and malformed snapshots instead of zero error',()=>{
     const {entity,timeline}=setup();
