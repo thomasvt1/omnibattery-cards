@@ -1,14 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-10-11
 
-- Hide retained import/export tariffs when their source is unavailable or unknown, and reject prior-day timelines in Forecast accuracy using the timeline timezone.
-
-- Add Energy today with horizontal daily-energy bars, a shared kWh scale, sensor detail links, and optional remaining-forecast rows.
-
-- Add Solar independence, Price windows, and Forecast accuracy cards with visual editors and light/dark previews.
-- Require explicit energy attribution assumptions and a saved forecast source; preserve missing data and incomplete intervals.
-- Add duration-weighted tariff windows, calculation tests, responsive browser checks, and production-bundle preview validation.
+- Add Solar independence, Price windows, Forecast accuracy, and Energy today cards with visual editors and light/dark previews.
+- Show daily energy totals as horizontal bars with a shared kWh scale, sensor detail links, and optional remaining-forecast rows.
+- Add duration-weighted upcoming tariff windows, preserving negative prices and excluding incomplete windows.
+- Require explicit solar attribution assumptions and a separately persisted forecast source; preserve missing data and incomplete intervals.
+- Hide retained import/export tariffs when their source is unavailable or unknown.
+- Reject prior-day timelines in Forecast accuracy using the timeline timezone.
+- Add regression tests, responsive browser checks, and production-bundle preview validation.
 
 ## 0.2.0
 
