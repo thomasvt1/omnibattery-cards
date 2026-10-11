@@ -4,6 +4,8 @@
 
 Nine compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
 
+[![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasvt1&repository=omnibattery-cards&category=plugin)
+
 | Card | What it shows |
 | --- | --- |
 | **Energy plan** | Solar, consumption, charge level, battery activity, and optional prices on a shared timeline. Measured values and forecasts remain distinct. |
@@ -51,6 +53,8 @@ Cards follow the active Home Assistant theme. They can open entity details, but 
 - Optional: a Nord Pool price sensor exposing timestamped `raw_today` and `raw_tomorrow` attributes.
 
 ## Install with HACS
+
+Use the **Add to HACS** button above to open this repository in your Home Assistant instance, or add it manually:
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/thomasvt1/omnibattery-cards` with type **Dashboard**.
