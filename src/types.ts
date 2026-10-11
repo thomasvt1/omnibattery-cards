@@ -27,12 +27,17 @@ export interface HomeAssistant {
     subscribeEvents?: (callback: (event: unknown) => void, eventType: string) => Promise<() => void>;
   };
 }
-export type CardType = 'custom:omnibattery-plan-card' | 'custom:omnibattery-overview-card' | 'custom:omnibattery-battery-card' | 'custom:omnibattery-system-battery-card' | 'custom:omnibattery-status-card';
+export type CardType = 'custom:omnibattery-energy-today-card' | 'custom:omnibattery-solar-independence-card' | 'custom:omnibattery-price-windows-card' | 'custom:omnibattery-forecast-accuracy-card' | 'custom:omnibattery-plan-card' | 'custom:omnibattery-overview-card' | 'custom:omnibattery-battery-card' | 'custom:omnibattery-system-battery-card' | 'custom:omnibattery-status-card';
 export interface CardConfig {
   type: CardType; title?: string; integration_id?: string; battery?: string;
   entities?: Record<string, string>; grid_inverted?: boolean;
   import_price_entity?: string; export_price_entity?: string;
   show_extension?: boolean;
+  show_forecasts?: boolean;
+  saved_forecast_entity?: string;
+  forecast_metric?: 'solar' | 'home';
+  assume_no_grid_charging?: boolean;
+  assume_solar_only_export?: boolean;
   layout?: 'columns' | 'stacked' | 'compact';
 }
 export interface Metric { value: number | null; entityId?: string; }
@@ -53,6 +58,9 @@ export interface TimelineSlot {
   actionActual: number | null; actionForecast: number | null;
   holdActual: boolean | null; holdForecast: boolean | null;
   actualCoverageSeconds: number | null;
+  forecastRemainingSeconds?: number;
+  solarForecastKwh?: number | null; homeForecastKwh?: number | null;
+  solarCoverageSeconds?: number | null; homeCoverageSeconds?: number | null;
 }
 export interface TimelineModel {
   available: boolean; error?: string; warnings: string[]; entityId?: string;

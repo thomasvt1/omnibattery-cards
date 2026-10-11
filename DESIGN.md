@@ -204,3 +204,11 @@ Unknown charge shows an em dash and an explicit Unavailable label, plus an unfil
 - **Don't** hide available chart rows to obtain a shorter mobile card.
 
 Recorded from `src/ui.ts`, `src/cards/*`, `src/editor.ts`, and `src/demo/style.css` after the approved compact-card implementation. No runtime raster assets are part of this system.
+
+## Insight cards
+
+Solar independence, Price windows, and Forecast accuracy follow the approved concept previews with a local 46px hero metric, semantic teal/purple/amber accents, and compact supporting charts. They inherit the shared card theme. The independence donut and split bar pair color with text; tariff windows remain display-only. Accuracy uses stepped interval-average paths and breaks at missing intervals. Headers, legends, and tariff windows wrap in narrow containers.
+
+### Energy today
+
+The horizontal-bar card follows the supplied Energy Today screenshot: labels left, kWh values right, rounded slim tracks underneath, and consistent spacing between rows. All bars share the largest visible kWh value as their scale. Energy colors inherit the host theme; the two forecast rows use lighter fills and explicit Forecast labels. Unavailable values retain their row with an em dash and dashed empty track. Known zero remains a zero-valued meter.

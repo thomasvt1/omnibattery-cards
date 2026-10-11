@@ -9,7 +9,7 @@ web
 TypeScript, Lit custom elements, Vite, and inline SVG. The user delegated the technology choice and approved this stack. Output is one HACS dashboard JavaScript module.
 
 ## Product
-Four display-only Home Assistant dashboard cards for people using Omnibattery: Energy plan, Overview, Battery, and Status. The cards help explain current energy flows, the day's measured and projected operation, each battery's condition, and why charging or discharging is limited.
+Nine display-only Home Assistant dashboard cards for people using Omnibattery: Energy plan, Overview, Battery, System battery, Status, Solar independence, Price windows, Forecast accuracy, and Energy today. The cards help explain current energy flows, the day's measured and projected operation, each battery's condition, and why charging or discharging is limited.
 
 ## Constraints
 Frontend only. No service calls, battery control, integration modifications, or new helpers. Work with Omnibattery v1.5.0 and Home Assistant 2026.10. Discover through registry metadata, not names. Distinguish actual from projected values and unknown from zero. No fictitious savings or appliance schedules. Respect Home Assistant units, locale, timezone, themes, and accessibility.
@@ -31,3 +31,7 @@ Public repository thomasvt1/omnibattery-cards, AGPL-3.0-or-later, versioned HACS
 
 ## Accessibility
 Keyboard-accessible chart inspection, touch support, visible focus, sufficient contrast, responsive reflow, and reduced motion. English labels with locale-aware formatting.
+
+## Insight cards
+
+The three additional cards follow the approved light/dark concept previews. Solar independence requires explicit attribution inputs or assumptions. Price windows use published tariffs only. Forecast accuracy consumes an explicitly configured, separately persisted snapshot; it does not create helpers or capture forecasts itself.

@@ -32,3 +32,27 @@ views:
         cards:
           - type: custom:omnibattery-status-card
             title: System status
+      - type: grid
+        cards:
+          - type: custom:omnibattery-solar-independence-card
+            # Supply a daily grid-to-home counter that excludes battery charging.
+            # entities:
+            #   dailyGridToHome: sensor.grid_to_home_energy_today
+            # Enable only when these assumptions apply to your installation:
+            # assume_no_grid_charging: true
+            # assume_solar_only_export: true
+      - type: grid
+        cards:
+          - type: custom:omnibattery-price-windows-card
+            # Required for tariff data:
+            # import_price_entity: sensor.your_import_price
+      - type: grid
+        cards:
+          - type: custom:omnibattery-forecast-accuracy-card
+            # Required separately persisted snapshot; see the README schema.
+            # saved_forecast_entity: sensor.saved_energy_forecast
+            forecast_metric: solar
+      - type: grid
+        cards:
+          - type: custom:omnibattery-energy-today-card
+            show_forecasts: true

@@ -154,6 +154,10 @@ export class OmnibatteryCardEditor extends LitElement {
     const isBattery = config.type === 'custom:omnibattery-battery-card';
     const isSystemBattery = config.type === 'custom:omnibattery-system-battery-card';
     const isPlan = config.type === 'custom:omnibattery-plan-card';
+    const isEnergyToday = config.type === 'custom:omnibattery-energy-today-card';
+    const isSolar = config.type === 'custom:omnibattery-solar-independence-card';
+    const isPrice = config.type === 'custom:omnibattery-price-windows-card';
+    const isAccuracy = config.type === 'custom:omnibattery-forecast-accuracy-card';
     const entities = this.registry.entities.filter(integrationEntity);
     const integrationIds = [...new Set(entities.map(entity => entity.config_entry_id).filter((id): id is string => !!id))];
     const scoped = entities.filter(entity => !config.integration_id || entity.config_entry_id === config.integration_id);
@@ -203,6 +207,17 @@ export class OmnibatteryCardEditor extends LitElement {
             </select>
             <small id="battery-help">Add one Battery card for each device you want to display.</small>
           </label>` : nothing}
+        ${isEnergyToday ? html`<label class="toggle"><input type="checkbox" .checked=${config.show_forecasts !== false} @change=${(event: Event) => this.updateConfig('show_forecasts', (event.target as HTMLInputElement).checked)} /><span>Show remaining forecasts</span></label>` : nothing}
+        ${isPrice ? this.entityField('import_price_entity', 'Import price entity', 'Required sensor with timestamped raw_today / raw_tomorrow prices.', true) : nothing}
+        ${isAccuracy ? html`
+          ${this.entityField('saved_forecast_entity', 'Saved forecast entity', 'Required schema 1 snapshot: saved_at and timestamped intervals containing solar_kwh / consumption_kwh. See README.', true)}
+          <label class="field" for="forecast-metric"><span id="forecast-metric-label">Forecast metric</span><select id="forecast-metric" aria-labelledby="forecast-metric-label" @change=${(event: Event) => this.updateConfig('forecast_metric', this.inputValue(event))}>
+            <option value="solar" .selected=${config.forecast_metric !== 'home'}>Solar</option><option value="home" .selected=${config.forecast_metric === 'home'}>Consumption</option>
+          </select></label>` : nothing}
+        ${isSolar ? html`
+          ${this.entityField('dailyGridToHome', 'Grid-to-home energy today', 'Optional kWh or Wh counter excluding grid energy used to charge batteries.')}
+          <label class="toggle"><input type="checkbox" .checked=${config.assume_no_grid_charging === true} @change=${(event: Event) => this.updateConfig('assume_no_grid_charging', (event.target as HTMLInputElement).checked)} /><span>Assume no grid charging</span></label>
+          <label class="toggle"><input type="checkbox" .checked=${config.assume_solar_only_export === true} @change=${(event: Event) => this.updateConfig('assume_solar_only_export', (event.target as HTMLInputElement).checked)} /><span>Assume solar-only export</span></label>` : nothing}
         ${isPlan ? html`
           ${this.entityField('import_price_entity', 'Import price entity', 'Optional Nord Pool sensor with timestamped raw_today / raw_tomorrow attributes.', true)}
           ${this.entityField('export_price_entity', 'Export price entity', 'Optional explicit export tariff source in the same timestamped format.', true)}
@@ -213,13 +228,13 @@ export class OmnibatteryCardEditor extends LitElement {
         <details>
           <summary>Entity overrides</summary>
           <p class="help">Optional. Use these when discovery cannot identify a source, or to select another sensor. Empty fields restore automatic discovery.</p>
-          ${(isBattery ? batteryMetrics : isSystemBattery ? systemBatteryMetrics : sources).map(([key, label, help]) => this.entityField(key, label, help))}
-          ${!isBattery && !isSystemBattery ? html`<label class="toggle"><input type="checkbox" .checked=${config.grid_inverted === true}
+          ${(isEnergyToday ? [...systemMetrics.filter(([key]) => key.startsWith('daily')), ...sources.filter(([key]) => key === 'timeline')] : isSolar ? systemMetrics.filter(([key]) => ['dailySolar', 'dailyHome', 'dailyGridImport', 'dailyGridExport'].includes(key)) : isAccuracy ? sources.filter(([key]) => key === 'timeline') : isPrice ? [] : isBattery ? batteryMetrics : isSystemBattery ? systemBatteryMetrics : sources).map(([key, label, help]) => this.entityField(key, label, help))}
+          ${!isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isBattery && !isSystemBattery ? html`<label class="toggle"><input type="checkbox" .checked=${config.grid_inverted === true}
             @change=${(event: Event) => this.updateConfig('grid_inverted', (event.target as HTMLInputElement).checked)} />
             <span>Grid source is positive when exporting</span>
           </label>` : nothing}
-          ${!isBattery && !isPlan && !isSystemBattery ? systemMetrics.map(([key, label, help]) => this.entityField(key, label, help)) : nothing}
-          ${!isSystemBattery && (isBattery || !isPlan) ? html`<p class="help">Explicit battery-cell and AC power overrides must be positive when charging and negative when discharging. AC and cell power are kept separate.</p>` : nothing}
+          ${!isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isBattery && !isPlan && !isSystemBattery ? systemMetrics.map(([key, label, help]) => this.entityField(key, label, help)) : nothing}
+          ${!isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isSystemBattery && (isBattery || !isPlan) ? html`<p class="help">Explicit battery-cell and AC power overrides must be positive when charging and negative when discharging. AC and cell power are kept separate.</p>` : nothing}
         </details>
         <datalist id="entities">${stateIds.map(id => html`<option value=${id}>${String(this.hass?.states[id].attributes.friendly_name ?? id)}</option>`)}</datalist>
       </div>`;

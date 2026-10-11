@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add Energy today with horizontal daily-energy bars, a shared kWh scale, sensor detail links, and optional remaining-forecast rows.
+
+- Add Solar independence, Price windows, and Forecast accuracy cards with visual editors and light/dark previews.
+- Require explicit energy attribution assumptions and a saved forecast source; preserve missing data and incomplete intervals.
+- Add duration-weighted tariff windows, calculation tests, responsive browser checks, and production-bundle preview validation.
+
 ## 0.2.0
 
 - Add the System battery card with the reported system charge level, total stored energy, and a charge bar for every battery.

@@ -130,6 +130,8 @@ export function parseTimeline(entity?: HassEntity, now = new Date(), fallbackZon
     // For the current cell, missing coverage means unknown, never a full quarter.
     const coveredSeconds = (coverage: number | null) => Math.min(slot.durationSeconds, Math.max(0, coverage ?? (past ? slot.durationSeconds : 0)));
     slot.actualCoverageSeconds = reportedCoverage === null ? null : coveredSeconds(reportedCoverage);
+    slot.solarCoverageSeconds = solarCoverage === null ? null : coveredSeconds(solarCoverage);
+    slot.homeCoverageSeconds = homeCoverage === null ? null : coveredSeconds(homeCoverage);
     if (hasActual) {
       slot.solarActualKw = energyPower(getNumber(series, 'solar_actual_kwh', index), coveredSeconds(solarCoverage));
       slot.homeActualKw = energyPower(getNumber(series, 'consumption_actual_kwh', index), coveredSeconds(homeCoverage));
@@ -155,6 +157,9 @@ export function parseTimeline(entity?: HassEntity, now = new Date(), fallbackZon
         slot.durationSeconds * (current ? 1 - result.currentProgress : 1);
       slot.solarForecastKw = energyPower(getNumber(series, 'solar_forecast_kwh', index), remaining);
       slot.homeForecastKw = energyPower(getNumber(series, 'consumption_forecast_kwh', index), remaining);
+      slot.forecastRemainingSeconds = remaining;
+      slot.solarForecastKwh = slot.solarForecastKw === null ? null : getNumber(series, 'solar_forecast_kwh', index);
+      slot.homeForecastKwh = slot.homeForecastKw === null ? null : getNumber(series, 'consumption_forecast_kwh', index);
       slot.socForecast = socValue(getNumber(operations, 'planned_soc_pct', index) ?? getNumber(operations, 'soc_end_pct', index));
       if (slot.socForecast === null && !current) slot.socForecast = socValue(getNumber(operations, 'soc_pct', index));
       slot.actionForecast = mask(getNumber(operations, 'planned_action_mask', index));

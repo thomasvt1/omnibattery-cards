@@ -131,6 +131,15 @@ export function createDemo(scenario: DemoScenario = 'solar', now = new Date()): 
       extended_horizon: { duration_s: Array(48).fill(900) },
     });
 
+    add('sensor.demo_grid_to_home', 1.85, 'kWh');
+    add('sensor.demo_saved_forecast', date, undefined, {
+      schema_version: 1, saved_at: new Date(today).toISOString(),
+      intervals: Array.from({length:96},(_,index)=>({
+        start:new Date(today+index*900000).toISOString(), end:new Date(today+(index+1)*900000).toISOString(),
+        solar_kwh:round(solarAt(index)/4*1.095), consumption_kwh:round(homeAt(index)/4*1.06),
+      })),
+    });
+
     const prices = (day: number) => Array.from({ length: 24 }, (_, hour) => ({
       start: new Date(today + day * 86_400_000 + hour * 3_600_000).toISOString(),
       end: new Date(today + day * 86_400_000 + (hour + 1) * 3_600_000).toISOString(),
