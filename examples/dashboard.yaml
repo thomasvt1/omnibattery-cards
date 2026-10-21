@@ -20,6 +20,15 @@ views:
             # import_price_entity: sensor.your_import_price
             # export_price_entity: sensor.your_export_price
       - type: grid
+        column_span: 3
+        cards:
+          - type: custom:omnibattery-daily-operation-card
+            show_extension: true
+            grid_options:
+              columns: full
+              rows: auto
+            # import_price_entity: sensor.your_import_price
+      - type: grid
         cards:
           - type: custom:omnibattery-overview-card
             title: Energy overview
@@ -56,8 +65,3 @@ views:
         cards:
           - type: custom:omnibattery-energy-today-card
             show_forecasts: true
-
-# Add this independent card to any section or masonry view:
-# - type: custom:omnibattery-daily-operation-card
-#   show_extension: true
-#   import_price_entity: sensor.your_import_price

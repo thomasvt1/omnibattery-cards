@@ -60,3 +60,9 @@ for(const name of ['plan','daily-operation'])test(`${name} selected range has ho
   await button.focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');
   await expect(button).toHaveCSS('outline-color','rgb(171, 205, 239)');await expect(button).toHaveCSS('outline-offset','-2px');
 });
+
+test('chart labels inherit Home Assistant theme typography',async({page})=>{
+  await page.goto('/');await page.evaluate(()=>document.documentElement.style.setProperty('--ha-font-family-body','Georgia'));
+  await expect(page.locator('omnibattery-price-windows-card svg text').first()).toHaveCSS('font-family','Georgia');
+  await expect(page.locator('omnibattery-plan-card svg text').first()).toHaveCSS('font-family','Georgia');
+});

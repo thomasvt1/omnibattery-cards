@@ -287,7 +287,7 @@ export class OmnibatteryCardEditor extends LitElement {
   }
 
   static styles = css`
-    :host { display: block; color: var(--primary-text-color, #202523); font-family: var(--paper-font-body1_-_font-family, inherit); }
+    :host { display: block; color: var(--primary-text-color, #202523); font-family: var(--ha-font-family-body, var(--paper-font-body1_-_font-family, inherit)); }
     .appearance-input{display:flex;gap:8px}.appearance-input input:first-child{flex:1}.appearance-input .color-picker{width:48px;flex:none;padding:4px}.advanced-appearance{margin-top:16px}
     .reset-fields{margin-top:16px;min-height:44px;font:inherit;color:inherit;background:var(--secondary-background-color,#f3f5f8);border:1px solid var(--divider-color,#ddd);border-radius:8px;padding:8px 12px;cursor:pointer}
     .editor { display: grid; gap: 16px; padding: 4px 0 12px; }
