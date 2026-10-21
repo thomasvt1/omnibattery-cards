@@ -9,7 +9,7 @@ web
 TypeScript, Lit custom elements, Vite, and inline SVG. The user delegated the technology choice and approved this stack. Output is one HACS dashboard JavaScript module.
 
 ## Product
-Nine display-only Home Assistant dashboard cards for people using Omnibattery: Energy plan, Overview, Battery, System battery, Status, Solar independence, Price windows, Forecast accuracy, and Energy today. The cards help explain current energy flows, the day's measured and projected operation, each battery's condition, and why charging or discharging is limited.
+Ten display-only Home Assistant dashboard cards for people using Omnibattery: Daily operation, Energy plan, Overview, Battery, System battery, Status, Solar independence, Price windows, Forecast accuracy, and Energy today. The cards help explain current energy flows, the day's measured and projected operation, each battery's condition, and why charging or discharging is limited.
 
 ## Constraints
 Frontend only. No service calls, battery control, integration modifications, or new helpers. Work with Omnibattery v1.5.0 and Home Assistant 2026.10. Discover through registry metadata, not names. Distinguish actual from projected values and unknown from zero. No fictitious savings or appliance schedules. Respect Home Assistant units, locale, timezone, themes, and accessibility.

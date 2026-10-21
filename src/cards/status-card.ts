@@ -19,23 +19,23 @@ export class OmnibatteryStatusCard extends BaseCard {
     .content { padding: 0; }
     .rows { list-style: none; margin: 0; padding: 0; }
     .row { margin: 0; padding: 0; }
-    .row + .row { border-top: 1px solid var(--divider-color, #e6e8ec); }
-    .status { display: flex; align-items: flex-start; gap: 12px; width: 100%; box-sizing: border-box; padding: 11px 0; color: var(--primary-text-color, #17202c); text-align: left; font: inherit; }
+    .row + .row { border-top: 1px solid var(--ob-line); }
+    .status { display: flex; align-items: flex-start; gap: 12px; width: 100%; box-sizing: border-box; padding: 11px 0; color: var(--ob-text); text-align: left; font: inherit; }
     button.status { border: 0; border-radius: 5px; background: transparent; cursor: pointer; }
     button.status:hover .title { text-decoration: underline; text-underline-offset: 3px; }
-    button.status:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 3px; }
-    .glyph { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; color: var(--secondary-text-color, #646b75); background: color-mix(in srgb, var(--secondary-text-color, #646b75) 9%, transparent); }
+    button.status:focus-visible { outline: 2px solid var(--ob-focus, var(--primary-color, #03a9f4)); outline-offset: -2px; }
+    .glyph { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; color: var(--ob-secondary); background: color-mix(in srgb, var(--ob-secondary) 9%, transparent); }
     .glyph svg { width: 19px; height: 19px; }
-    .good .glyph { color: var(--ob-battery, #009d91); background: color-mix(in srgb, var(--ob-battery, #009d91) 10%, transparent); }
-    .warning .glyph { color: var(--warning-color, #9b7200); background: color-mix(in srgb, var(--warning-color, #9b7200) 10%, transparent); }
-    .error .glyph { color: var(--error-color, #db4437); background: color-mix(in srgb, var(--error-color, #db4437) 9%, transparent); }
+    .good .glyph { color: var(--ob-good); background: color-mix(in srgb, var(--ob-good) 10%, transparent); }
+    .warning .glyph { color: var(--ob-warning); background: color-mix(in srgb, var(--ob-warning) 10%, transparent); }
+    .error .glyph { color: var(--ob-error); background: color-mix(in srgb, var(--ob-error) 9%, transparent); }
     .copy { display: flex; flex-direction: column; gap: 2px; align-self: center; min-width: 0; padding: 1px 0; }
     .title { font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
-    .detail { font-size: 12px; line-height: 1.5; color: var(--secondary-text-color, #646b75); overflow-wrap: anywhere; }
-    .empty { margin: 0; padding: 8px 0 2px; color: var(--secondary-text-color, #646b75); font-size: 14px; line-height: 1.6; }
+    .detail { font-size: 12px; line-height: 1.5; color: var(--ob-secondary); overflow-wrap: anywhere; }
+    .empty { margin: 0; padding: 8px 0 2px; color: var(--ob-secondary); font-size: 14px; line-height: 1.6; }
   `];
 
-  protected render() {
+  protected renderContent() {
     const s = this.snapshot;
     return html`
       <ha-card>

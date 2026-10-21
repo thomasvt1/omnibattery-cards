@@ -109,6 +109,8 @@ export function createDemo(scenario: DemoScenario = 'solar', now = new Date()): 
       operations[`${prefix}_charge_to_battery_kwh`] = array(index => seconds(index) && !isGap(index) ? round(Math.max(0, cellAt(index)) * seconds(index) / 3600) : null);
       operations[`${prefix}_discharge_from_battery_kwh`] = array(index => seconds(index) && !isGap(index) ? round(Math.max(0, -cellAt(index)) * seconds(index) / 3600) : null);
     }
+    operations.solar_to_battery_kwh = array(index => remainingSeconds(index) ? round(Math.max(0, cellAt(index)) * remainingSeconds(index) / 3600) : null);
+    operations.stored_energy_end_kwh = array(index => remainingSeconds(index) ? round(5.76 * socAt(index) / 100) : null);
     operations.observed_seconds_by_action_by_interval = Array.from({length:96}, (_,index) =>
       actualSeconds(index) && !isGap(index) ? { hold: index >= 8 && index < 24 ? actualSeconds(index) : 0 } : null);
     operations.planned_delay_until = Array.from({length:96}, (_,index) =>
@@ -118,6 +120,7 @@ export function createDemo(scenario: DemoScenario = 'solar', now = new Date()): 
       start: new Date(today + 86_400_000 + index * 900_000).toISOString(),
       end: new Date(today + 86_400_000 + (index + 1) * 900_000).toISOString(),
       solar_kwh: round(solarAt(index) / 4), consumption_kwh: round(homeAt(index) / 4),
+      solar_to_battery_kwh: round(Math.max(0, cellAt(index)) / 4), stored_energy_end_kwh: round(5.76 * socAt(index) / 100),
       soc_end_pct: socAt(index), planned_action_mask: actionAt(index),
       charge_to_battery_kwh: round(Math.max(0, cellAt(index)) / 4),
       discharge_from_battery_kwh: round(Math.max(0, -cellAt(index)) / 4),

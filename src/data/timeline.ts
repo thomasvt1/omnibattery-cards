@@ -9,6 +9,10 @@ const energyPower = (energy: number | null, seconds: number): number | null => e
 const socValue = (value: number | null): number | null => value !== null && value >= 0 && value <= 100 ? value : null;
 const netEnergy = (charge: number | null, discharge: number | null): number | null =>
   charge === null && discharge === null ? null : (charge ?? 0) - (discharge ?? 0);
+const nonnegative = (value: number | null) => value !== null && value >= 0 ? value : null;
+// Table energy must not assume a missing charge/discharge channel is zero.
+const knownNetEnergy = (charge: number | null, discharge: number | null) =>
+  charge !== null && charge >= 0 && discharge !== null && discharge >= 0 ? charge - discharge : null;
 const mask = (value: number | null): number | null => value !== null && Number.isInteger(value) && value >= 0 && value <= 7 ? value : null;
 
 /** Delay context alone can mean the feature is enabled, not that charging is held. */
@@ -139,6 +143,7 @@ export function parseTimeline(entity?: HassEntity, now = new Date(), fallbackZon
       // Mixed SOC is safe only on a strictly past cell; current may include a projection.
       if (slot.socActual === null && past) slot.socActual = socValue(getNumber(operations, 'soc_pct', index));
       slot.actionActual = mask(getNumber(operations, 'actual_action_mask', index));
+      slot.batteryActualKwh = knownNetEnergy(getNumber(operations, 'actual_charge_to_battery_kwh', index), getNumber(operations, 'actual_discharge_from_battery_kwh', index));
       const actualEnergy = netEnergy(getNumber(operations, 'actual_charge_to_battery_kwh', index), getNumber(operations, 'actual_discharge_from_battery_kwh', index));
       const coverage = coveredSeconds(reportedCoverage);
       slot.batteryActualKw = actualEnergy !== null && coverage > 0 ? actualEnergy * 3600 / coverage : null;
@@ -163,6 +168,9 @@ export function parseTimeline(entity?: HassEntity, now = new Date(), fallbackZon
       slot.socForecast = socValue(getNumber(operations, 'planned_soc_pct', index) ?? getNumber(operations, 'soc_end_pct', index));
       if (slot.socForecast === null && !current) slot.socForecast = socValue(getNumber(operations, 'soc_pct', index));
       slot.actionForecast = mask(getNumber(operations, 'planned_action_mask', index));
+      slot.batteryForecastKwh = knownNetEnergy(getNumber(operations, 'planned_charge_to_battery_kwh', index), getNumber(operations, 'planned_discharge_from_battery_kwh', index));
+      slot.solarToBatteryForecastKwh = nonnegative(getNumber(operations, 'solar_to_battery_kwh', index));
+      slot.storedForecastKwh = nonnegative(getNumber(operations, 'stored_energy_end_kwh', index));
       const forecastEnergy = netEnergy(getNumber(operations, 'planned_charge_to_battery_kwh', index), getNumber(operations, 'planned_discharge_from_battery_kwh', index));
       slot.batteryForecastKw = forecastEnergy !== null && remaining > 0 ? forecastEnergy * 3600 / remaining : null;
       const plannedDelayContext = (getNumber(operations, 'planned_context_mask', index) ?? 0) & 2;
@@ -202,6 +210,12 @@ function appendExtension(result: TimelineModel, data: Record<string, unknown>): 
       slot.actionForecast = mask(number(item.planned_action_mask) ?? number(item.action_mask));
       const solarCharge = number(item.solar_to_battery_kwh), gridCharge = number(item.grid_to_battery_kwh);
       const charging = number(item.charge_to_battery_kwh) ?? (solarCharge === null && gridCharge === null ? null : (solarCharge ?? 0) + (gridCharge ?? 0));
+      slot.batteryForecastKwh = knownNetEnergy(charging, number(item.discharge_from_battery_kwh) ?? number(item.battery_to_home_kwh));
+      slot.solarToBatteryForecastKwh = nonnegative(solarCharge);
+      slot.storedForecastKwh = nonnegative(number(item.stored_energy_end_kwh));
+      slot.homeForecastKwh = slot.homeForecastKw === null ? null : number(item.consumption_kwh);
+      slot.solarForecastKwh = slot.solarForecastKw === null ? null : number(item.solar_kwh);
+      slot.forecastRemainingSeconds = duration;
       const energy = netEnergy(charging, number(item.discharge_from_battery_kwh) ?? number(item.battery_to_home_kwh));
       slot.batteryForecastKw = energy !== null && duration > 0 ? energy * 3600 / duration : null;
       slot.holdForecast = delayHold(slot.actionForecast, record(data.delay), item.delay_until,

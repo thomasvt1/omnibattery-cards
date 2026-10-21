@@ -27,8 +27,17 @@ export interface HomeAssistant {
     subscribeEvents?: (callback: (event: unknown) => void, eventType: string) => Promise<() => void>;
   };
 }
-export type CardType = 'custom:omnibattery-energy-today-card' | 'custom:omnibattery-solar-independence-card' | 'custom:omnibattery-price-windows-card' | 'custom:omnibattery-forecast-accuracy-card' | 'custom:omnibattery-plan-card' | 'custom:omnibattery-overview-card' | 'custom:omnibattery-battery-card' | 'custom:omnibattery-system-battery-card' | 'custom:omnibattery-status-card';
+export type CardType = 'custom:omnibattery-daily-operation-card' | 'custom:omnibattery-energy-today-card' | 'custom:omnibattery-solar-independence-card' | 'custom:omnibattery-price-windows-card' | 'custom:omnibattery-forecast-accuracy-card' | 'custom:omnibattery-plan-card' | 'custom:omnibattery-overview-card' | 'custom:omnibattery-battery-card' | 'custom:omnibattery-system-battery-card' | 'custom:omnibattery-status-card';
+export interface Appearance {
+  background?: string; text_color?: string; secondary_text_color?: string; border_color?: string;
+  border_width?: number; border_radius?: number; padding?: number; title_size?: number; value_size?: number;
+  shadow?: string; hover_color?: string; pressed_color?: string; focus_color?: string;
+  solar_color?: string; home_color?: string; grid_color?: string; export_color?: string;
+  charge_color?: string; battery_color?: string; soc_color?: string; price_color?: string;
+  warning_color?: string; success_color?: string; error_color?: string; divider_color?: string; subtle_color?: string;
+}
 export interface CardConfig {
+  appearance?: Appearance;
   type: CardType; title?: string; integration_id?: string; battery?: string;
   entities?: Record<string, string>; grid_inverted?: boolean;
   import_price_entity?: string; export_price_entity?: string;
@@ -60,6 +69,8 @@ export interface TimelineSlot {
   actualCoverageSeconds: number | null;
   forecastRemainingSeconds?: number;
   solarForecastKwh?: number | null; homeForecastKwh?: number | null;
+  batteryActualKwh?: number | null; batteryForecastKwh?: number | null;
+  solarToBatteryForecastKwh?: number | null; storedForecastKwh?: number | null;
   solarCoverageSeconds?: number | null; homeCoverageSeconds?: number | null;
 }
 export interface TimelineModel {

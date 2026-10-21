@@ -18,21 +18,25 @@ export class OmnibatteryPlanCard extends BaseCard {
   private selected: number | null = null;
   private extended = false;
   private observer?: ResizeObserver;
+  private resizeFrame?: number;
+  private observedChart?: Element;
   static styles = [BaseCard.styles, css`
-    :host { --plot-label: var(--secondary-text-color, #687080); }
+    :host { --plot-label: var(--ob-secondary); }
     .ob-header { margin-bottom: 12px; }
-    .topline { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+    .topline { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
     .period { color:var(--ob-secondary); font-size:12px; }
     .range { display:flex; gap:2px; padding:3px; background:var(--ob-subtle); border-radius:8px; }
     .range button { border:0; background:transparent; padding:5px 9px; border-radius:5px; font-size:12px; }
-    .range button[aria-pressed=true] { background:var(--ha-card-background,var(--card-background-color,#fff)); color:var(--primary-color,#0288d1); }
+    @media (hover:hover) { .range button[aria-pressed]:hover { background:var(--ob-hover,color-mix(in srgb,var(--primary-color,#03a9f4) 8%,transparent)); } }
+    .range button[aria-pressed]:active { background:var(--ob-pressed,color-mix(in srgb,var(--primary-color,#03a9f4) 16%,transparent)); }
+    .range button[aria-pressed=true] { background:var(--ob-background, var(--ha-card-background, var(--card-background-color, #fff))); color:var(--primary-color,#0288d1); }
     .chart { border-radius:4px; touch-action:pan-y; }
     .chart svg { display:block; width:100%; overflow:visible; }
     .chart text { font-family:inherit; font-size:11px; fill:var(--plot-label); }
     .chart .axis { stroke:var(--ob-line); stroke-width:1; }
     .chart .zero { stroke:var(--ob-secondary); stroke-opacity:.35; }
     .chart .now { stroke:var(--ob-secondary); stroke-width:1; stroke-dasharray:4 4; }
-    .chart .selected { stroke:var(--primary-text-color,#202530); stroke-width:1; stroke-opacity:.45; }
+    .chart .selected { stroke:var(--ob-text); stroke-width:1; stroke-opacity:.45; }
     .chart .line { fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
     .chart .forecast { stroke-dasharray:5 5; opacity:.8; }
     .legend { display:flex; flex-wrap:wrap; gap:7px 15px; font-size:11px; color:var(--ob-secondary); margin-top:8px; }
@@ -44,9 +48,9 @@ export class OmnibatteryPlanCard extends BaseCard {
     .sample.dashed { border-top-style:dashed; }
     .inspector { border-top:1px solid var(--ob-line); margin-top:15px; padding-top:11px; display:flex; gap:5px 18px; flex-wrap:wrap; font-size:12px; min-height:43px; }
     .inspector strong { font-weight:600; } .inspector span { color:var(--ob-secondary); }
-    .inspector .value { color:var(--primary-text-color,#202530); }
+    .inspector .value { color:var(--ob-text); }
     .empty { min-height:180px; display:grid; place-content:center; gap:8px; text-align:center; color:var(--ob-secondary); }
-    .empty strong { font-size:16px; color:var(--primary-text-color,#202530); }
+    .empty strong { font-size:16px; color:var(--ob-text); }
     .footnote { margin:9px 0 0; color:var(--ob-secondary); font-size:11px; }
     .footnote p { margin:6px 0 0; } .footnote summary { cursor:pointer; }
     .inspect-hint { color:var(--ob-secondary); font-size:12px; margin-top:10px; }
@@ -60,12 +64,29 @@ export class OmnibatteryPlanCard extends BaseCard {
   connectedCallback() {
     super.connectedCallback();
     this.observer = new ResizeObserver(entries => {
-      const measured = Math.max(260, Math.floor(entries[0].contentRect.width - 40));
-      if (this.width !== measured) this.width = measured;
+      const entry = entries.find(item => item.target === this.observedChart);
+      if (!entry || entry.contentRect.width <= 0) return;
+      const measured = Math.max(1, Math.floor(entry.contentRect.width));
+      if (this.resizeFrame !== undefined) cancelAnimationFrame(this.resizeFrame);
+      this.resizeFrame = requestAnimationFrame(() => { if (this.width !== measured) this.width = measured; });
     });
-    this.observer.observe(this);
+    this.requestUpdate();
   }
-  disconnectedCallback() { this.observer?.disconnect(); super.disconnectedCallback(); }
+  protected updated() {
+    // The chart appears after discovery and can be replaced on reconnect.
+    // Its own content box reflects theme/config padding and border changes.
+    const chart = this.renderRoot.querySelector('.chart') ?? undefined;
+    if (chart === this.observedChart) return;
+    if (this.resizeFrame !== undefined) cancelAnimationFrame(this.resizeFrame);
+    this.observer?.disconnect();
+    this.observedChart = chart;
+    if (chart) this.observer?.observe(chart);
+  }
+  disconnectedCallback() {
+    if (this.resizeFrame !== undefined) cancelAnimationFrame(this.resizeFrame);
+    this.observer?.disconnect(); this.observedChart = undefined;
+    super.disconnectedCallback();
+  }
   private get plotLeft() { return this.width<450?60:84; }
 
   private path(values: (number | null)[], x: (index: number) => number, y: (value: number) => number) {
@@ -184,7 +205,7 @@ export class OmnibatteryPlanCard extends BaseCard {
       </g>
     </g>`;
   }
-  protected render() {
+  protected renderContent() {
     const model=this.snapshot, timeline=model.timeline;
     if(!timeline.available) return html`<ha-card>${this.renderHeader('Energy plan')}${this.renderNotice()}<div class="empty"><strong>Timeline unavailable</strong><span>${timeline.error || 'Select an Omnibattery daily operation timeline entity.'}</span></div></ha-card>`;
     const extended=this.config.show_extension || this.extended;
@@ -201,7 +222,7 @@ export class OmnibatteryPlanCard extends BaseCard {
     const left=this.plotLeft,right=this.width-10;
     const nowX=left+(timeline.currentIndex+timeline.currentProgress)/count*(right-left);
     const selectedX=left+(selected+.5)/count*(right-left);
-    const tickStep = right-left<400 ? (count>96?72:48) : 24;
+    const tickStep = right-left<180 ? count : right-left<400 ? (count>96?72:48) : 24;
     const ticks = Array.from({length:Math.ceil(count/tickStep)},(_,i)=>i*tickStep).filter(i=>i===0 || count-i>=tickStep*.7);
     ticks.push(count);
     const activeSeries=[...power.filter(s=>!s.forecast),soc[0],...(hasPrices?prices:[])].filter(s=>s.values.some(v=>v!=null)||[...power,...soc].find(p=>p.label===s.label&&p.forecast)?.values.some(v=>v!=null));

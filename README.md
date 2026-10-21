@@ -2,12 +2,13 @@
 
 <img src="https://raw.githubusercontent.com/thomasvt1/omnibattery-cards/main/icon.png" alt="Omnibattery Cards: a teal battery with stacked energy dashboard cards" width="128" height="128" />
 
-Nine compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
+Ten compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
 
 [![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasvt1&repository=omnibattery-cards&category=plugin)
 
 | Card | What it shows |
 | --- | --- |
+| **Daily operation** | Quarter-hour operations, charge level, battery energy, solar-to-battery, consumption, and optional tariffs in a scrollable table. |
 | **Energy plan** | Solar, consumption, charge level, battery activity, and optional prices on a shared timeline. Measured values and forecasts remain distinct. |
 | **Overview** | Live energy flow, battery charge level, operating status, and today's energy totals. |
 | **Battery** | One battery's charge level, stored energy, AC and cell power, temperature, daily totals, and available health metrics. |
@@ -33,6 +34,14 @@ Cards follow the active Home Assistant theme. They can open entity details, but 
 | Battery | ![Battery, light](examples/battery-light.png) | ![Battery, dark](examples/battery-dark.png) |
 | System battery | ![System battery, light](examples/system-battery-columns-light.png) | ![System battery, dark](examples/system-battery-columns-dark.png) |
 | Status | ![Status, light](examples/status-light.png) | ![Status, dark](examples/status-dark.png) |
+
+### Daily operation
+
+![Daily operation in a light theme](examples/daily-operation-1050-light.png)
+
+![Daily operation in a dark theme](examples/daily-operation-1050-dark.png)
+
+[Mobile preview](examples/daily-operation-390-dark.png) · [Mobile energy columns](examples/daily-operation-mobile-details-dark.png) · [Custom appearance](examples/daily-operation-custom-theme.png) · [Loading state](examples/daily-operation-loading.png)
 
 ### New insight cards
 
@@ -95,6 +104,52 @@ battery: YOUR_HOME_ASSISTANT_DEVICE_ID
 ```
 
 Select a battery in the visual editor to fill its device ID. Repeat the Battery card for each device. The ID is a Home Assistant device-registry ID, not an entity ID, IP address, or battery name.
+
+### Daily operation table
+
+```yaml
+type: custom:omnibattery-daily-operation-card
+# Optional; discovered automatically for a single installation.
+entities:
+  timeline: sensor.omnibattery_daily_operation_timeline
+# Optional separate tariff sensor; prices are not in the operation timeline.
+import_price_entity: sensor.your_import_price
+show_extension: true
+```
+
+The table uses the same schema 1 timeline as Energy plan. **Around now** starts two quarters before the sensor's current interval and shows up to six hours ahead. **Full day** shows all 96 wall-clock quarters, plus the optional published next-day extension. Scroll vertically for later rows and horizontally on phones; time and column headings stay visible.
+
+Historical rows show recorded operations and covered consumption. The current and upcoming rows show the remaining plan, including projected stored energy when provided. Battery energy is net charge minus discharge; both channels must be known. Solar-to-battery and stored-energy projections are never presented as historical measurements. Missing values remain `—`; stale timelines suppress projections. Action masks can show multiple operations within one quarter and do not imply their order. A zero action mask means **Idle**; **Hold** requires explicit delay evidence.
+
+Prices use timestamped import tariffs in the source unit, duration-weighted over each quarter. Gaps, overlapping tariffs, and ambiguous repeated DST quarters show `—`. Negative prices retain their sign; bar length represents absolute price. Skipped and repeated daylight-saving intervals remain labelled.
+
+### Appearance and loading
+
+All ten cards follow Home Assistant's active light/dark theme, typography, card surface, border, shadow, and energy colors. The native editor's **Appearance** section provides optional per-card overrides, following [Quatt Cards PR #16](https://github.com/thomasvt1/quatt-cards/pull/16). Empty fields inherit theme defaults; **Reset appearance to theme** removes only appearance overrides.
+
+```yaml
+type: custom:omnibattery-daily-operation-card
+appearance:
+  background: 'var(--card-background-color)'
+  border_radius: 20
+  padding: 12
+  title_size: 19
+  solar_color: '#d79500'
+  price_color: '#9965e8'
+```
+
+| Options | Accepted values |
+| --- | --- |
+| `background`, `text_color`, `secondary_text_color`, `border_color` | CSS colors, including variables and `transparent` |
+| `border_width` | 0–8 pixels |
+| `border_radius`, `padding` | 0–48 pixels; zero is supported |
+| `title_size`, `value_size` | 10–36 / 10–48 pixels; value size affects primary readings, not chart axes or labels |
+| `shadow` | CSS box shadow, including `none` or a CSS variable |
+| `hover_color`, `pressed_color`, `focus_color` | Optional interaction colors; defaults use the theme's primary color |
+| `solar_color`, `home_color`, `grid_color`, `export_color`, `charge_color`, `battery_color`, `soc_color`, `price_color` | Optional energy colors |
+| `success_color`, `warning_color`, `error_color`, `divider_color`, `subtle_color` | Optional status and supporting surface colors |
+
+Initial discovery shows a theme-aware skeleton, following [Quatt Cards PR #18](https://github.com/thomasvt1/quatt-cards/pull/18). Reduced motion disables its animation. Loaded data stays visible during background refresh; failed discovery shows an error instead of an endless loader. Reconnecting starts a new discovery request even if the old connection never responds.
 
 ### System battery layouts
 

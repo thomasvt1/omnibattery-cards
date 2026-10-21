@@ -3,6 +3,7 @@ import type { CardConfig, HomeAssistant, RegistryData, Snapshot } from './types'
 import { buildSnapshot } from './data';
 import { loadRegistry, watchRegistry } from './connection';
 import { cardStyles } from './ui';
+import { applyAppearance, validateAppearance } from './appearance';
 
 export abstract class BaseCard extends LitElement {
   static styles: CSSResultGroup = cardStyles;
@@ -11,7 +12,7 @@ export abstract class BaseCard extends LitElement {
   protected registry: RegistryData = { entities: [], devices: [] };
   private cached?: Snapshot;
   private registryError = '';
-  private registryLoading = false;
+  private pendingGeneration?: number;
   private registryLoaded = false;
   private connectionKey?: object;
   private registryStop?: () => void;
@@ -27,9 +28,9 @@ export abstract class BaseCard extends LitElement {
     const key = value.connection || value.callWS || value;
     if(this.connectionKey !== key) {
       this.connectionKey = key; this.registryStop?.(); this.registryStop = undefined;
-      this.registryLoaded = false; this.registryGeneration++; this.cached = undefined;
+      this.registryLoaded = false; this.registryError = ''; this.registryGeneration++; this.cached = undefined;
     }
-    const relevant = !old || !this.cached || old.locale !== value.locale || old.panels !== value.panels || old.themes !== value.themes
+    const relevant = !old || !this.cached || old.locale !== value.locale || old.language !== value.language || old.config !== value.config || old.panels !== value.panels || old.themes !== value.themes
       || [...this.trackedIds].some(id => old.states[id] !== value.states[id]);
     if (!this.registryLoaded) void this.ensureRegistry();
     if (relevant) this.invalidate();
@@ -54,7 +55,9 @@ export abstract class BaseCard extends LitElement {
   setConfig(config: CardConfig) {
     if (!config || !config.type?.startsWith('custom:omnibattery-')) throw new Error('Select an Omnibattery card type.');
     if (config.entities && (typeof config.entities !== 'object' || Array.isArray(config.entities))) throw new Error('entities must map data roles to entity IDs.');
-    this.config = { ...config, entities: { ...config.entities } };
+    validateAppearance(config.appearance);
+    this.config = { ...config, entities: { ...config.entities }, appearance: config.appearance ? { ...config.appearance } : undefined };
+    applyAppearance(this, config.appearance);
     this.invalidate();
   }
   static getConfigElement() { return document.createElement('omnibattery-card-editor'); }
@@ -80,22 +83,43 @@ export abstract class BaseCard extends LitElement {
     this.registryStop?.(); this.registryStop = undefined; this.registryGeneration++;
   }
   private async ensureRegistry() {
-    if (!this._hass || !this.isConnected || this.registryLoading) return;
-    this.registryLoading = true;
+    if (!this._hass || !this.isConnected || this.pendingGeneration === this.registryGeneration) return;
     const generation = this.registryGeneration;
+    this.pendingGeneration = generation;
     if (!this.registryStop) this.registryStop = watchRegistry(this._hass, () => { void this.ensureRegistry(); });
     try {
       const registry = await loadRegistry(this._hass);
       if (generation !== this.registryGeneration) return;
       this.registry = registry; this.registryLoaded = true; this.registryError = ''; this.invalidate();
-    } catch { this.registryError = 'Could not read the entity registry. Reload the dashboard to retry.'; this.invalidate(); }
+    } catch { if (generation !== this.registryGeneration) return; this.registryError = 'Could not read the entity registry. Reload the dashboard to retry.'; this.invalidate(); }
     finally {
-      this.registryLoading = false;
+      if (this.pendingGeneration === generation) this.pendingGeneration = undefined;
       if(generation !== this.registryGeneration && this.isConnected) void this.ensureRegistry();
     }
   }
+  protected abstract renderContent(): unknown;
+  protected render() {
+    if (!this.registryLoaded && !this.registryError) return this.renderSkeleton();
+    if (this.registryError && !this.registryLoaded) return html`<ha-card>${this.renderHeader('Omnibattery')}${this.renderNotice()}</ha-card>`;
+    return this.renderContent();
+  }
+  private renderSkeleton() {
+    const table = this.config.type.endsWith('daily-operation-card');
+    const compact = this.config.layout === 'compact';
+    return html`<ha-card class=${`loading-card ${compact ? 'compact-loading' : ''}`} role="status" aria-label="Loading Omnibattery data" aria-busy="true">
+      <div class="skeleton-content" aria-hidden="true">
+        <div class="skeleton-block skeleton-title"></div>
+        <div class=${`skeleton-body ${table ? 'skeleton-table' : ''}`}>
+          ${table ? Array.from({length:8},()=>html`<div class="skeleton-block skeleton-line"></div>`) : html`
+            <div class="skeleton-block skeleton-icon"></div><div class="skeleton-readings">
+              <div class="skeleton-block skeleton-value"></div><div class="skeleton-block skeleton-line"></div>
+            </div>`}
+        </div><div class="skeleton-block skeleton-bar"></div>
+      </div>
+    </ha-card>`;
+  }
   protected invalidate() { this.cached = undefined; this.requestUpdate(); }
-  protected shouldUpdate(_changed: PropertyValues) { return Boolean(this.config && this._hass); }
+  protected shouldUpdate(_changed: PropertyValues) { return Boolean(this.config); }
   protected format(value: number | null, unit: string, digits = 1) {
     if (value == null || !Number.isFinite(value)) return '—';
     if (unit === 'W' && Math.abs(value) >= 1000) { value /= 1000; unit = 'kW'; }

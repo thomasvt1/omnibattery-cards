@@ -13,8 +13,8 @@ export class OmnibatteryEnergyTodayCard extends BaseCard {
     .row { min-width:0; }
     .reading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:7px; }
     .label { color:var(--ob-secondary); overflow-wrap:anywhere; }
-    .value { font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
-    button.value { border:0; padding:0; background:transparent; cursor:pointer; font:inherit; font-weight:600; }
+    .value { font-size:var(--ob-value-size,14px); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    button.value { border:0; padding:0; background:transparent; cursor:pointer; font:inherit; font-size:var(--ob-value-size,14px); font-weight:600; }
     button.value:hover { text-decoration:underline; text-underline-offset:3px; }
     .unit { font-size:12px; font-weight:400; color:var(--ob-secondary); margin-left:3px; }
     .track { height:9px; overflow:hidden; border-radius:999px; background:var(--ob-subtle); }
@@ -24,23 +24,23 @@ export class OmnibatteryEnergyTodayCard extends BaseCard {
     .tag { font-size:10px; color:var(--ob-secondary); margin-left:6px; }
     .footnote { color:var(--ob-secondary); font-size:11px; margin:16px 0 0; }
     .unknown .track { border:1px dashed var(--ob-line); background:transparent; }
-    @container (max-width:350px) { .rows { gap:14px; } .reading { font-size:13px; gap:8px; } }
+    @container (max-width:350px) { .rows { gap:14px; } .reading { font-size: var(--ob-value-size, 13px); gap:8px; } }
   `];
-  protected render() {
+  protected renderContent() {
     const s = this.snapshot, d = s.daily, remaining = remainingToday(s.timeline);
     const nonnegative = (m:Metric):Metric => ({...m,value:m.value !== null && m.value >= 0 ? m.value : null});
     const rows:EnergyRow[] = [
-      {label:'Charged',metric:nonnegative(d.charge),color:'var(--energy-battery-in-color, #4ecb88)'},
+      {label:'Charged',metric:nonnegative(d.charge),color:'var(--ob-charge)'},
       {label:'Discharged',metric:nonnegative(d.discharge),color:'var(--ob-battery)'},
       {label:'Solar',metric:nonnegative(d.solar),color:'var(--ob-solar)'},
-      {label:'Home',metric:nonnegative(d.home),color:'var(--energy-consumption-color, #7dcada)'},
+      {label:'Home',metric:nonnegative(d.home),color:'var(--ob-home)'},
       {label:'Grid imported',metric:nonnegative(d.gridImport),color:'var(--ob-grid)'},
-      {label:'Grid exported',metric:nonnegative(d.gridExport),color:'var(--energy-grid-return-color, #ff951e)'},
+      {label:'Grid exported',metric:nonnegative(d.gridExport),color:'var(--ob-export)'},
     ];
     const showForecasts = this.config.show_forecasts !== false;
     if (showForecasts) rows.push(
       {label:'Solar remaining',metric:{value:remaining.solar},color:'var(--ob-solar)',forecast:true},
-      {label:'Expected consumption',metric:{value:d.home.value !== null && d.home.value >= 0 && remaining.home !== null ? d.home.value + remaining.home : null},color:'var(--energy-consumption-color, #7dcada)',forecast:true},
+      {label:'Expected consumption',metric:{value:d.home.value !== null && d.home.value >= 0 && remaining.home !== null ? d.home.value + remaining.home : null},color:'var(--ob-home)',forecast:true},
     );
     const maximum = Math.max(0,...rows.map(row=>row.metric.value??0));
     return html`<ha-card>${this.renderHeader('Energy today','kWh')}

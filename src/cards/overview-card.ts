@@ -21,26 +21,26 @@ export class OmnibatteryOverviewCard extends BaseCard {
     .node-copy { display: flex; flex-direction: column; align-items: center; min-width: 0; }
     .node-button { display: flex; flex-direction: column; align-items: center; padding: 0 4px; background: transparent; border: 0; border-radius: 8px; color: inherit; font: inherit; cursor: pointer; }
     .node-button:hover .disc { background: color-mix(in srgb, currentColor 15%, transparent); }
-    .node-button:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 4px; }
-    .disc { display: grid; place-items: center; box-sizing: border-box; width: 42px; height: 42px; margin-bottom: 6px; border: 1px solid currentColor; border-radius: 50%; background: color-mix(in srgb, currentColor 9%, var(--ha-card-background, var(--card-background-color, #fff))); }
+    .node-button:focus-visible { outline: 2px solid var(--ob-focus, var(--primary-color, #03a9f4)); outline-offset: -2px; }
+    .disc { display: grid; place-items: center; box-sizing: border-box; width: 42px; height: 42px; margin-bottom: 6px; border: 1px solid currentColor; border-radius: 50%; background: color-mix(in srgb, currentColor 9%, var(--ob-background, var(--ha-card-background, var(--card-background-color, #fff)))); }
     .disc svg { width: 24px; height: 24px; }
     .solar { color: var(--ob-solar, #d99500); }
     .home { color: var(--ob-home, #7a8491); }
     .grid { color: var(--ob-grid, #198ecc); }
     .battery { color: var(--ob-battery, #009d91); }
-    .reading { color: var(--primary-text-color, #17202c); font-weight: 600; font-size: 15px; line-height: 1.4; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .label { color: var(--secondary-text-color, #646b75); font-size: 12px; line-height: 1.5; }
-    .flow-caption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px 12px; margin: 0 0 12px; font-size: 12px; line-height: 1.5; color: var(--secondary-text-color, #646b75); }
+    .reading { color: var(--ob-text); font-weight: 600; font-size: var(--ob-value-size, 15px); line-height: 1.4; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .label { color: var(--ob-secondary); font-size: 12px; line-height: 1.5; }
+    .flow-caption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px 12px; margin: 0 0 12px; font-size: 12px; line-height: 1.5; color: var(--ob-secondary); }
     .flow-caption button { border: 0; padding: 0; background: transparent; color: inherit; font: inherit; border-radius: 3px; cursor: pointer; text-align: left; }
-    .flow-caption button:hover { color: var(--primary-text-color, #17202c); }
-    button:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 3px; }
-    .today { margin: 0 0 5px; color: var(--primary-text-color, #17202c); font-size: 13px; font-weight: 600; line-height: 1.5; }
+    .flow-caption button:hover { color: var(--ob-text); }
+    button:focus-visible { outline: 2px solid var(--ob-focus, var(--primary-color, #03a9f4)); outline-offset: -2px; }
+    .today { margin: 0 0 5px; color: var(--ob-text); font-size: 13px; font-weight: 600; line-height: 1.5; }
     .daily { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 18px; }
-    .daily-item { display: flex; align-items: baseline; justify-content: space-between; gap: 5px; min-width: 0; padding: 5px 0; border-top: 1px solid var(--divider-color, #e6e8ec); color: var(--secondary-text-color, #646b75); font-size: 12px; line-height: 1.5; }
-    .daily-value { color: var(--primary-text-color, #17202c); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 500; }
+    .daily-item { display: flex; align-items: baseline; justify-content: space-between; gap: 5px; min-width: 0; padding: 5px 0; border-top: 1px solid var(--ob-line); color: var(--ob-secondary); font-size: 12px; line-height: 1.5; }
+    .daily-value { color: var(--ob-text); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 500; }
     .daily-item button { padding: 0; border: 0; border-radius: 2px; background: transparent; font: inherit; cursor: pointer; }
     .daily-item button:hover { text-decoration: underline; text-underline-offset: 3px; }
-    .operating { display: flex; align-items: center; gap: 7px; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--divider-color, #e6e8ec); color: var(--secondary-text-color, #646b75); font-size: 12px; line-height: 1.5; }
+    .operating { display: flex; align-items: center; gap: 7px; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--ob-line); color: var(--ob-secondary); font-size: 12px; line-height: 1.5; }
     .operating svg { width: 15px; height: 15px; flex: none; }
     @container (max-width: 450px) {
       .overview-main { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 12px; align-items: start; }
@@ -51,14 +51,14 @@ export class OmnibatteryOverviewCard extends BaseCard {
       .node-button { min-width: 0; max-width: 100%; padding: 0; }
       .disc { width: 32px; height: 32px; margin-bottom: 4px; }
       .disc svg { width: 20px; height: 20px; }
-      .reading { font-size: 13px; }
+      .reading { font-size: var(--ob-value-size, 13px); }
       .label { font-size: 11px; }
       .node.battery { grid-column: 2 / 4; margin-left: calc(25% - 16px); align-items: flex-start; flex-direction: row; text-align: left; }
       .battery .node-button { flex-direction: row; text-align: left; }
       .battery .disc { flex: none; margin: 0 7px 0 0; }
       .battery .node-copy { align-items: flex-start; }
       .battery .label { overflow-wrap: anywhere; }
-      .today-section { grid-column: 2; grid-row: 1; min-width: 0; border-left: 1px solid var(--divider-color, #e6e8ec); padding-left: 12px; }
+      .today-section { grid-column: 2; grid-row: 1; min-width: 0; border-left: 1px solid var(--ob-line); padding-left: 12px; }
       .today { font-size: 12px; margin: 0 0 5px; }
       .daily { grid-template-columns: minmax(0, 1fr); }
       .daily-item { flex-wrap: wrap; border: 0; padding: 2px 0; gap: 0 3px; font-size: 11px; }
@@ -72,7 +72,7 @@ export class OmnibatteryOverviewCard extends BaseCard {
     }
   `];
 
-  protected render() {
+  protected renderContent() {
     const s = this.snapshot;
     const gridDirection = s.grid.value === null ? 'Grid' : s.grid.value > 0 ? 'From grid' : s.grid.value < 0 ? 'To grid' : 'Grid';
     const acDirection = s.acPower.value === null ? 'AC exchange' : s.acPower.value > 0 ? 'AC charging' : s.acPower.value < 0 ? 'AC discharging' : 'AC exchange';
