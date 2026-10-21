@@ -26,6 +26,7 @@ jobs:
       - run: npm run test:browser
       - run: npm run update:examples
       - run: node scripts/validate-insight-previews.mjs
+      - run: node scripts/validate-operation-previews.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

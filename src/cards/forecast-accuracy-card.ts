@@ -12,7 +12,7 @@ export class OmnibatteryForecastAccuracyCard extends BaseCard {
   `];
   static getStubConfig() { return { type: 'custom:omnibattery-forecast-accuracy-card' }; }
   private time(stamp:number) { return new Intl.DateTimeFormat(this.hass.locale?.language || 'en',{timeZone:this.hass.config?.time_zone || 'UTC',hour:'2-digit',minute:'2-digit'}).format(stamp); }
-  render() {
+  protected renderContent() {
     const metric = this.config.forecast_metric ?? 'solar';
     const result = forecastAccuracy(this.config.saved_forecast_entity ? this.hass.states[this.config.saved_forecast_entity] : undefined,this.snapshot.timeline,metric,Date.now());
     const points = result.points;

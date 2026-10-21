@@ -9,7 +9,7 @@ export class OmnibatterySolarIndependenceCard extends BaseCard {
   static styles = [BaseCard.styles, insightStyles, css`
     .summary { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .donut { width:100px; height:100px; flex-shrink:0; position:relative; border-radius:50%; }
-    .donut::before { content:''; position:absolute; inset:18px; border-radius:50%; background:var(--ha-card-background,var(--card-background-color,#fff)); }
+    .donut::before { content:''; position:absolute; inset:18px; border-radius:50%; background:var(--ob-background, var(--ha-card-background, var(--card-background-color, #fff))); }
     .donut .icon { position:absolute; top:39px; left:39px; }
     .bar { display:flex; height:26px; border-radius:5px; overflow:hidden; margin-top:20px; background:var(--ob-subtle); }
     .bar span { display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#fff; }
@@ -18,7 +18,7 @@ export class OmnibatterySolarIndependenceCard extends BaseCard {
     .row strong { margin-left:auto; white-space:nowrap; }
   `];
   static getStubConfig() { return { type: 'custom:omnibattery-solar-independence-card' }; }
-  render() {
+  protected renderContent() {
     const d = this.snapshot.daily;
     const source = this.config.entities?.dailyGridToHome;
     const gridHome = source ? metric(this.hass.states[source], 'energy').value : this.config.assume_no_grid_charging ? d.gridImport.value : null;

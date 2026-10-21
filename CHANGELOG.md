@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 2026-10-21
+
+- Add Daily operation: a quarter-hour table with measured/planned labels, current interval, charge level, battery energy, solar-to-battery, consumption, and optional tariffs.
+- Preserve missing values, signed tariffs, DST gaps, sparse next-day projections, and stale-data boundaries.
+- Add shared native appearance controls to all ten cards, including theme reset, semantic colors, spacing, typography, and interaction feedback, aligned with Quatt Cards.
+- Show accessible, theme-aware skeletons during initial discovery and reconnects; retain readings during background refresh and respect reduced motion.
+- Prevent stalled or failed old registry requests from blocking replacement connections.
+- Add data and browser regressions, plus production-bundle visual previews in light, dark, custom themes, and mobile layouts.
+
 ## 0.3.0 — 2026-10-11
 
 - Add Solar independence, Price windows, Forecast accuracy, and Energy today cards with visual editors and light/dark previews.

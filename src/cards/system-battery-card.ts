@@ -37,12 +37,12 @@ export class OmnibatterySystemBatteryCard extends BaseCard {
     .system-values { min-width: 0; }
     .system-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 3px 10px; margin-bottom: 9px; }
     .system-reading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 7px; }
-    .system-soc { font-size: 24px; line-height: 1.25; font-weight: 600; color: var(--primary-text-color, #17202c); white-space: nowrap; }
+    .system-soc { font-size: var(--ob-value-size, 24px); line-height: 1.25; font-weight: 600; color: var(--ob-text); white-space: nowrap; }
     .stored { color: var(--ob-secondary); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
     .unavailable { color: var(--ob-secondary); font-size: 11px; line-height: 1.5; }
     button { padding: 0; border: 0; border-radius: 3px; background: transparent; text-align: left; font: inherit; cursor: pointer; }
     button:hover { text-decoration: underline; text-underline-offset: 3px; }
-    button:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 4px; }
+    button:focus-visible { outline: 2px solid var(--ob-focus, var(--primary-color, #03a9f4)); outline-offset: -2px; }
     .meter { position: relative; width: 100%; overflow: hidden; border-radius: 5px; background: var(--disabled-color, var(--ob-line)); }
     .meter-fill { height: 100%; border-radius: inherit; background: var(--ob-battery); }
     .system-meter { height: 9px; }
@@ -52,7 +52,7 @@ export class OmnibatterySystemBatteryCard extends BaseCard {
     .battery-item { min-width: 0; }
     .battery-name { min-width: 0; color: var(--ob-secondary); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
     .battery-reading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
-    .battery-soc { font-size: 20px; line-height: 1.3; font-weight: 600; color: var(--primary-text-color, #17202c); white-space: nowrap; }
+    .battery-soc { font-size: var(--ob-value-size, 20px); line-height: 1.3; font-weight: 600; color: var(--ob-text); white-space: nowrap; }
     [data-layout="columns"] .battery-list { grid-template-columns: repeat(var(--battery-columns, 3), minmax(0, 1fr)); gap: 22px 24px; }
     [data-layout="columns"] .battery-item { position: relative; display: flex; flex-direction: column; }
     [data-layout="columns"] .battery-item:not(.first-column)::before { content: ''; position: absolute; left: -12px; top: 0; bottom: 0; border-left: 1px solid var(--ob-line); }
@@ -61,9 +61,9 @@ export class OmnibatterySystemBatteryCard extends BaseCard {
     [data-layout="columns"] .battery-meter { margin-top: 10px; }
     [data-layout="stacked"] .battery-list { grid-template-columns: minmax(0, 1fr); gap: 21px; }
     [data-layout="stacked"] .battery-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 7px 12px; }
-    [data-layout="stacked"] .battery-name { color: var(--primary-text-color, #17202c); font-size: 14px; }
+    [data-layout="stacked"] .battery-name { color: var(--ob-text); font-size: 14px; }
     [data-layout="stacked"] .battery-reading { justify-content: flex-end; max-width: 100px; }
-    [data-layout="stacked"] .battery-soc { font-size: 15px; font-weight: 500; }
+    [data-layout="stacked"] .battery-soc { font-size: var(--ob-value-size, 15px); font-weight: 500; }
     [data-layout="stacked"] .battery-meter { grid-column: 1 / -1; }
     .compact-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; margin-bottom: 17px; }
     .compact-title { min-width: 0; }
@@ -71,10 +71,10 @@ export class OmnibatterySystemBatteryCard extends BaseCard {
     .compact-header .system-reading { justify-content: flex-end; max-width: 108px; }
     [data-layout="compact"] .battery-list { grid-template-columns: minmax(0, 1fr); gap: 13px; padding-top: 17px; }
     [data-layout="compact"] .battery-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(30px, 1.6fr) minmax(40px, auto); align-items: center; gap: 12px; }
-    [data-layout="compact"] .battery-name { color: var(--primary-text-color, #17202c); font-size: 13px; }
+    [data-layout="compact"] .battery-name { color: var(--ob-text); font-size: 13px; }
     [data-layout="compact"] .battery-meter { grid-column: 2; grid-row: 1; }
     [data-layout="compact"] .battery-reading { grid-column: 3; grid-row: 1; justify-content: flex-end; max-width: 76px; }
-    [data-layout="compact"] .battery-soc { font-size: 14px; font-weight: 500; }
+    [data-layout="compact"] .battery-soc { font-size: var(--ob-value-size, 14px); font-weight: 500; }
     .empty { margin: 0; border-top: 1px solid var(--ob-line); padding-top: 17px; color: var(--ob-secondary); font-size: 13px; line-height: 1.6; }
     @container (max-width: 350px) {
       .system-summary { grid-template-columns: 46px minmax(0, 1fr); gap: 11px; }
@@ -88,7 +88,7 @@ export class OmnibatterySystemBatteryCard extends BaseCard {
     }
   `];
 
-  protected render() {
+  protected renderContent() {
     const s = this.snapshot;
     const layout: Layout = this.config.layout ?? 'columns';
     const count = s.batteries.length;

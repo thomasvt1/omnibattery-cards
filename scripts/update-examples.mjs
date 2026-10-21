@@ -63,7 +63,7 @@ try {
   for (const type of types) {
     const name = type.replace(/^omnibattery-/, '').replace(/-card$/, '');
     const layouts = name === 'system-battery' ? ['columns', 'stacked', 'compact'] : [undefined];
-    await page.setViewportSize({ width: name === 'plan' ? 1440 : 390, height: 1100 });
+    await page.setViewportSize({ width: name === 'daily-operation' ? 1050 : name === 'plan' ? 1440 : 390, height: 1100 });
     await page.evaluate(type => {
       document.querySelector('[data-example]')?.removeAttribute('data-example');
       document.querySelector(type).setAttribute('data-example', '');

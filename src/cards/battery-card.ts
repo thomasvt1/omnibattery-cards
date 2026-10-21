@@ -20,44 +20,44 @@ export class OmnibatteryBatteryCard extends BaseCard {
     .battery-disc { display: grid; place-items: center; width: 43px; height: 43px; color: var(--ob-battery, #009d91); background: color-mix(in srgb, var(--ob-battery, #009d91) 11%, transparent); border-radius: 50%; }
     .battery-disc svg { width: 25px; height: 25px; }
     .charge-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 2px 10px; margin-bottom: 7px; }
-    .soc { font-size: 21px; line-height: 1.3; font-weight: 600; color: var(--primary-text-color, #17202c); }
-    .stored { color: var(--secondary-text-color, #646b75); font-size: 12px; line-height: 1.5; }
+    .soc { font-size: var(--ob-value-size, 21px); line-height: 1.3; font-weight: 600; color: var(--ob-text); }
+    .stored { color: var(--ob-secondary); font-size: 12px; line-height: 1.5; }
     .meter { height: 9px; border-radius: 5px; background: var(--disabled-color, #dce1e6); overflow: hidden; }
     .meter-fill { height: 100%; background: var(--ob-battery, #009d91); border-radius: inherit; }
-    .meter-unknown { color: var(--secondary-text-color, #646b75); font-size: 12px; line-height: 1.5; }
-    .metrics { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 18px; border-top: 1px solid var(--divider-color, #e6e8ec); padding-top: 16px; }
+    .meter-unknown { color: var(--ob-secondary); font-size: 12px; line-height: 1.5; }
+    .metrics { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 18px; border-top: 1px solid var(--ob-line); padding-top: 16px; }
     .instant { display: grid; gap: 14px; }
     .metric { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
-    .metric-label { font-size: 12px; line-height: 1.5; color: var(--secondary-text-color, #646b75); }
-    .metric-value { font-size: 17px; line-height: 1.5; font-weight: 600; color: var(--primary-text-color, #17202c); }
-    .today { border-left: 1px solid var(--divider-color, #e6e8ec); padding-left: 18px; }
-    h3 { margin: 0 0 8px; font-size: 13px; line-height: 1.5; font-weight: 600; color: var(--primary-text-color, #17202c); }
+    .metric-label { font-size: 12px; line-height: 1.5; color: var(--ob-secondary); }
+    .metric-value { font-size: var(--ob-value-size, 17px); line-height: 1.5; font-weight: 600; color: var(--ob-text); }
+    .today { border-left: 1px solid var(--ob-line); padding-left: 18px; }
+    h3 { margin: 0 0 8px; font-size: 13px; line-height: 1.5; font-weight: 600; color: var(--ob-text); }
     .daily { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 3px 8px; margin-top: 8px; font-size: 12px; line-height: 1.5; }
-    .daily-label { color: var(--secondary-text-color, #646b75); }
-    .daily-value { color: var(--primary-text-color, #17202c); font-weight: 500; white-space: nowrap; }
+    .daily-label { color: var(--ob-secondary); }
+    .daily-value { color: var(--ob-text); font-weight: 500; white-space: nowrap; }
     button { padding: 0; border: 0; border-radius: 3px; background: transparent; text-align: left; font: inherit; cursor: pointer; }
     button:hover { text-decoration: underline; text-underline-offset: 3px; }
-    button:focus-visible, summary:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 4px; }
+    button:focus-visible, summary:focus-visible { outline: 2px solid var(--ob-focus, var(--primary-color, #03a9f4)); outline-offset: -2px; }
     .soc, .stored, .metric-value, .daily-value, .health-value { font-variant-numeric: tabular-nums; }
-    .ac { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-top: 16px; font-size: 12px; line-height: 1.5; color: var(--secondary-text-color, #646b75); }
+    .ac { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-top: 16px; font-size: 12px; line-height: 1.5; color: var(--ob-secondary); }
     .ac button { color: inherit; }
-    .unavailable { display: flex; gap: 7px; align-items: flex-start; margin: 0 0 12px; color: var(--warning-color, #8f6900); font-size: 12px; line-height: 1.5; }
+    .unavailable { display: flex; gap: 7px; align-items: flex-start; margin: 0 0 12px; color: var(--ob-warning); font-size: 12px; line-height: 1.5; }
     .unavailable svg { flex: none; width: 17px; height: 17px; margin-top: 1px; }
-    .empty { color: var(--secondary-text-color, #646b75); font-size: 14px; line-height: 1.6; margin: 0; padding: 7px 0; }
-    details { margin-top: 16px; border-top: 1px solid var(--divider-color, #e6e8ec); padding-top: 11px; }
-    summary { cursor: pointer; color: var(--secondary-text-color, #646b75); font-size: 12px; line-height: 1.6; border-radius: 3px; }
-    summary:hover { color: var(--primary-text-color, #17202c); }
+    .empty { color: var(--ob-secondary); font-size: 14px; line-height: 1.6; margin: 0; padding: 7px 0; }
+    details { margin-top: 16px; border-top: 1px solid var(--ob-line); padding-top: 11px; }
+    summary { cursor: pointer; color: var(--ob-secondary); font-size: 12px; line-height: 1.6; border-radius: 3px; }
+    summary:hover { color: var(--ob-text); }
     .health { display: grid; gap: 7px; margin-top: 11px; }
-    .health-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 3px 12px; font-size: 12px; line-height: 1.5; color: var(--secondary-text-color, #646b75); }
-    .health-value { color: var(--primary-text-color, #17202c); }
+    .health-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 3px 12px; font-size: 12px; line-height: 1.5; color: var(--ob-secondary); }
+    .health-value { color: var(--ob-text); }
     @container (max-width: 450px) {
       .charge { margin-bottom: 16px; gap: 10px; }
       .metrics { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr); column-gap: 11px; padding-top: 14px; }
       .metrics.no-temperature { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
       .instant { display: contents; }
-      .instant > .metric + .metric { border-left: 1px solid var(--divider-color, #e6e8ec); padding-left: 11px; }
+      .instant > .metric + .metric { border-left: 1px solid var(--ob-line); padding-left: 11px; }
       .metric-label { font-size: 11px; }
-      .metric-value { font-size: 15px; }
+      .metric-value { font-size: var(--ob-value-size, 15px); }
       .today { padding-left: 11px; min-width: 0; }
       h3 { font-size: 12px; margin-bottom: 4px; }
       .daily { font-size: 11px; margin-top: 4px; gap: 0 5px; }
@@ -72,7 +72,7 @@ export class OmnibatteryBatteryCard extends BaseCard {
     }
   `];
 
-  protected render() {
+  protected renderContent() {
     const s = this.snapshot;
     const battery = this.config.battery ? s.batteries.find(item => item.id === this.config.battery) : s.batteries[0];
     if (!battery) return html`<ha-card>${this.renderHeader('Battery')}${this.renderNotice()}<div class="content"><p class="empty">${this.config.battery ? 'The selected battery is unavailable. Choose a battery in the card configuration.' : 'No battery was found. Check the Omnibattery integration or select a battery in the card configuration.'}</p></div></ha-card>`;

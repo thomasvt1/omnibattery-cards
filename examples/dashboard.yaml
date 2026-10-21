@@ -56,3 +56,8 @@ views:
         cards:
           - type: custom:omnibattery-energy-today-card
             show_forecasts: true
+
+# Add this independent card to any section or masonry view:
+# - type: custom:omnibattery-daily-operation-card
+#   show_extension: true
+#   import_price_entity: sensor.your_import_price

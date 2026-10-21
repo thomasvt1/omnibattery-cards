@@ -9,7 +9,7 @@ export class OmnibatteryPriceWindowsCard extends BaseCard {
     .window.low { background:color-mix(in srgb,var(--ob-battery) 9%,transparent); }
     .window-label { font-size:12px; font-weight:600; }
     .window-values { display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; font-size:14px; }
-    .window-values strong { font-size:17px; }
+    .window-values strong { font-size: var(--ob-value-size, 17px); }
   `];
   static getStubConfig() { return { type: 'custom:omnibattery-price-windows-card' }; }
   private time(stamp: number, date = false) {
@@ -32,7 +32,7 @@ export class OmnibatteryPriceWindowsCard extends BaseCard {
     const s = this.snapshot.importPrices;
     return s?.currency && s.unit === `${s.currency}/kWh` ? '/ kWh' : s?.unit ?? '';
   }
-  render() {
+  protected renderContent() {
     const series = this.snapshot.importPrices, now = Date.now();
     const { current, low, high } = priceWindows(series, now);
     const zone = this.hass.config?.time_zone || 'UTC';

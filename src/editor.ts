@@ -1,6 +1,7 @@
+import { appearanceFields, basicAppearanceFields, advancedAppearanceFields, validateAppearance } from './appearance';
 import { LitElement, css, html, nothing, type PropertyValues } from 'lit';
 import { loadRegistry, watchRegistry } from './connection';
-import type { CardConfig, HomeAssistant, RegistryData, RegistryEntity } from './types';
+import type { Appearance, CardConfig, HomeAssistant, RegistryData, RegistryEntity } from './types';
 
 type Override = readonly [key: string, label: string, help?: string];
 
@@ -132,6 +133,49 @@ export class OmnibatteryCardEditor extends LitElement {
 
   private inputValue(event: Event) { return (event.target as HTMLInputElement).value; }
 
+  private updateAppearance(key: keyof Appearance, event: Event) {
+    if (!this.config) return;
+    const input = event.target as HTMLInputElement;
+    const appearance = { ...this.config.appearance };
+    if (!input.value.trim()) delete appearance[key];
+    else Object.assign(appearance, { [key]: input.type === 'number' ? Number(input.value) : input.value.trim() });
+    try { validateAppearance(appearance); input.setCustomValidity(''); }
+    catch (error) { input.setCustomValidity((error as Error).message); input.reportValidity(); return; }
+    const config = { ...this.config };
+    if (Object.keys(appearance).length) config.appearance = appearance;
+    else delete config.appearance;
+    this.emitConfig(config);
+  }
+
+  private appearanceField(field: typeof appearanceFields[number]) {
+    const [key, label, type] = field;
+    const value = this.config?.appearance?.[key];
+    return html`<label class="field" for=${`appearance-${key}`}><span>${label}${type === 'number' ? ' (px)' : ''}</span>
+      <div class="appearance-input">
+        <input id=${`appearance-${key}`} type=${type === 'number' ? 'number' : 'text'}
+          min=${type === 'number' ? field[4] : nothing} max=${type === 'number' ? field[5] : nothing} step="any"
+          .value=${value === undefined ? '' : String(value)} placeholder=${type === 'shadow' ? 'Theme default · e.g. none or 0 2px 8px #0003' : 'Theme default'}
+          @input=${(e: Event)=>(e.target as HTMLInputElement).setCustomValidity('')}
+          @change=${(e: Event)=>this.updateAppearance(key,e)} />
+        ${type === 'color' ? html`<input class="color-picker" type="color" aria-label=${`Pick ${label.toLowerCase()}`}
+          .value=${typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : '#03a9f4'}
+          @input=${(e: Event)=>this.updateAppearance(key,e)} />` : nothing}
+      </div>
+    </label>`;
+  }
+
+  private renderAppearance() {
+    return html`<details><summary>Appearance</summary>
+      <p class="help">Leave fields empty to follow your theme. Colors accept hex, CSS variables, or transparent. Hover and pressed feedback use your theme’s primary color.</p>
+      ${basicAppearanceFields.map(field=>this.appearanceField(field))}
+      <details class="advanced-appearance"><summary>Advanced colors</summary>
+        <p class="help">Optional interaction and energy-color overrides. Hover is a light primary-color tint; pressed is stronger. Focus uses the primary color.</p>
+        ${advancedAppearanceFields.map(field=>this.appearanceField(field))}
+      </details>
+      <button class="reset-fields" @click=${()=>{const config={...this.config!};delete config.appearance;this.emitConfig(config);}}>Reset appearance to theme</button>
+    </details>`;
+  }
+
   private entityField(key: string, label: string, help?: string, topLevel = false) {
     const value = topLevel ? this.config?.[key as 'import_price_entity' | 'export_price_entity'] : this.config?.entities?.[key];
     return html`
@@ -153,6 +197,7 @@ export class OmnibatteryCardEditor extends LitElement {
     if (!config) return nothing;
     const isBattery = config.type === 'custom:omnibattery-battery-card';
     const isSystemBattery = config.type === 'custom:omnibattery-system-battery-card';
+    const isOperation = config.type === 'custom:omnibattery-daily-operation-card';
     const isPlan = config.type === 'custom:omnibattery-plan-card';
     const isEnergyToday = config.type === 'custom:omnibattery-energy-today-card';
     const isSolar = config.type === 'custom:omnibattery-solar-independence-card';
@@ -218,23 +263,24 @@ export class OmnibatteryCardEditor extends LitElement {
           ${this.entityField('dailyGridToHome', 'Grid-to-home energy today', 'Optional kWh or Wh counter excluding grid energy used to charge batteries.')}
           <label class="toggle"><input type="checkbox" .checked=${config.assume_no_grid_charging === true} @change=${(event: Event) => this.updateConfig('assume_no_grid_charging', (event.target as HTMLInputElement).checked)} /><span>Assume no grid charging</span></label>
           <label class="toggle"><input type="checkbox" .checked=${config.assume_solar_only_export === true} @change=${(event: Event) => this.updateConfig('assume_solar_only_export', (event.target as HTMLInputElement).checked)} /><span>Assume solar-only export</span></label>` : nothing}
-        ${isPlan ? html`
+        ${isPlan || isOperation ? html`
           ${this.entityField('import_price_entity', 'Import price entity', 'Optional Nord Pool sensor with timestamped raw_today / raw_tomorrow attributes.', true)}
-          ${this.entityField('export_price_entity', 'Export price entity', 'Optional explicit export tariff source in the same timestamped format.', true)}
+          ${!isOperation ? this.entityField('export_price_entity', 'Export price entity', 'Optional explicit export tariff source in the same timestamped format.', true) : nothing}
           <label class="toggle"><input type="checkbox" .checked=${config.show_extension === true}
             @change=${(event: Event) => this.updateConfig('show_extension', (event.target as HTMLInputElement).checked)} />
             <span>Show next-day timeline when available</span>
           </label>` : nothing}
+        ${this.renderAppearance()}
         <details>
           <summary>Entity overrides</summary>
           <p class="help">Optional. Use these when discovery cannot identify a source, or to select another sensor. Empty fields restore automatic discovery.</p>
-          ${(isEnergyToday ? [...systemMetrics.filter(([key]) => key.startsWith('daily')), ...sources.filter(([key]) => key === 'timeline')] : isSolar ? systemMetrics.filter(([key]) => ['dailySolar', 'dailyHome', 'dailyGridImport', 'dailyGridExport'].includes(key)) : isAccuracy ? sources.filter(([key]) => key === 'timeline') : isPrice ? [] : isBattery ? batteryMetrics : isSystemBattery ? systemBatteryMetrics : sources).map(([key, label, help]) => this.entityField(key, label, help))}
-          ${!isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isBattery && !isSystemBattery ? html`<label class="toggle"><input type="checkbox" .checked=${config.grid_inverted === true}
+          ${(isOperation ? sources.filter(([key]) => key === 'timeline') : isEnergyToday ? [...systemMetrics.filter(([key]) => key.startsWith('daily')), ...sources.filter(([key]) => key === 'timeline')] : isSolar ? systemMetrics.filter(([key]) => ['dailySolar', 'dailyHome', 'dailyGridImport', 'dailyGridExport'].includes(key)) : isAccuracy ? sources.filter(([key]) => key === 'timeline') : isPrice ? [] : isBattery ? batteryMetrics : isSystemBattery ? systemBatteryMetrics : sources).map(([key, label, help]) => this.entityField(key, label, help))}
+          ${!isOperation && !isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isBattery && !isSystemBattery ? html`<label class="toggle"><input type="checkbox" .checked=${config.grid_inverted === true}
             @change=${(event: Event) => this.updateConfig('grid_inverted', (event.target as HTMLInputElement).checked)} />
             <span>Grid source is positive when exporting</span>
           </label>` : nothing}
-          ${!isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isBattery && !isPlan && !isSystemBattery ? systemMetrics.map(([key, label, help]) => this.entityField(key, label, help)) : nothing}
-          ${!isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isSystemBattery && (isBattery || !isPlan) ? html`<p class="help">Explicit battery-cell and AC power overrides must be positive when charging and negative when discharging. AC and cell power are kept separate.</p>` : nothing}
+          ${!isOperation && !isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isBattery && !isPlan && !isSystemBattery ? systemMetrics.map(([key, label, help]) => this.entityField(key, label, help)) : nothing}
+          ${!isOperation && !isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isSystemBattery && (isBattery || !isPlan) ? html`<p class="help">Explicit battery-cell and AC power overrides must be positive when charging and negative when discharging. AC and cell power are kept separate.</p>` : nothing}
         </details>
         <datalist id="entities">${stateIds.map(id => html`<option value=${id}>${String(this.hass?.states[id].attributes.friendly_name ?? id)}</option>`)}</datalist>
       </div>`;
@@ -242,6 +288,8 @@ export class OmnibatteryCardEditor extends LitElement {
 
   static styles = css`
     :host { display: block; color: var(--primary-text-color, #202523); font-family: var(--paper-font-body1_-_font-family, inherit); }
+    .appearance-input{display:flex;gap:8px}.appearance-input input:first-child{flex:1}.appearance-input .color-picker{width:48px;flex:none;padding:4px}.advanced-appearance{margin-top:16px}
+    .reset-fields{margin-top:16px;min-height:44px;font:inherit;color:inherit;background:var(--secondary-background-color,#f3f5f8);border:1px solid var(--divider-color,#ddd);border-radius:8px;padding:8px 12px;cursor:pointer}
     .editor { display: grid; gap: 16px; padding: 4px 0 12px; }
     p { margin: 0; line-height: 1.5; }
     .intro, .help, small { color: var(--secondary-text-color, #68716b); font-size: 13px; }
