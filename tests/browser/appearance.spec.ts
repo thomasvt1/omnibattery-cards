@@ -66,3 +66,21 @@ test('chart labels inherit Home Assistant theme typography',async({page})=>{
   await expect(page.locator('omnibattery-price-windows-card svg text').first()).toHaveCSS('font-family','Georgia');
   await expect(page.locator('omnibattery-plan-card svg text').first()).toHaveCSS('font-family','Georgia');
 });
+
+test('plan SVG follows actual content width after padding, border and theme changes',async({page})=>{
+  await page.setViewportSize({width:390,height:1200});await page.goto('/');
+  const card=page.locator('omnibattery-plan-card');await card.evaluate(e=>(e as HTMLElement).style.width='320px');
+  async function fits(){
+    await expect.poll(()=>card.locator('.chart').evaluate(e=>Math.abs(e.getBoundingClientRect().width-e.querySelector('svg')!.viewBox.baseVal.width))).toBeLessThan(1);
+    expect(await card.locator('ha-card').evaluate(e=>e.scrollWidth-e.clientWidth)).toBeLessThanOrEqual(1);
+  }
+  await page.evaluate(()=>window.demo.setConfig('plan',{appearance:{padding:48,border_width:8}}));
+  await fits();await expect(card.locator('.chart')).toHaveCSS('width','208px');
+  await page.evaluate(()=>window.demo.setConfig('plan',{appearance:{padding:0,border_width:0}}));
+  await fits();await expect(card.locator('.chart')).toHaveCSS('width','320px');
+  await page.evaluate(()=>window.demo.setConfig('plan',{appearance:undefined}));
+  await card.evaluate(e=>(e as HTMLElement).style.setProperty('--ha-card-border-width','6px'));
+  await fits();await expect(card.locator('.chart')).toHaveCSS('width','276px');
+  await page.evaluate(()=>window.demo.setScenario('missing'));await expect(card.locator('.chart')).toHaveCount(0);
+  await page.evaluate(()=>window.demo.setScenario('solar'));await expect(card.locator('.chart')).toBeVisible();await fits();
+});

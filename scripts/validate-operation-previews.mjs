@@ -43,6 +43,18 @@ try {
   await card.screenshot({path:'examples/daily-operation-loading.png'});
   await page.evaluate(()=>{document.querySelector('omnibattery-daily-operation-card').hass=window.previewHass;});
   await expect(card.locator('tbody tr')).toHaveCount(26);
+  // Regression from PR review: padding must not shrink chart labels via SVG scaling.
+  await page.setViewportSize({width:390,height:1100});
+  await page.evaluate(()=>{
+    document.querySelector('[data-preview]').removeAttribute('data-preview');
+    const plan=document.querySelector('omnibattery-plan-card');plan.setAttribute('data-preview','');plan.style.width='320px';
+    window.demo.setConfig('plan',{appearance:{padding:48,border_width:8}});
+  });
+  const plan=page.locator('omnibattery-plan-card');
+  await expect(plan.locator('.chart')).toHaveCSS('width','208px');
+  await expect.poll(()=>plan.locator('.chart svg').evaluate(e=>e.viewBox.baseVal.width)).toBe(208);
+  await plan.screenshot({path:'examples/plan-custom-spacing.png'});
+  await plan.evaluate(e=>e.style.width='');
   // Compare all cards with a shared custom appearance at mobile width.
   await page.setViewportSize({width:390,height:1000});
   await page.evaluate(()=>{

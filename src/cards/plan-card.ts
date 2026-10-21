@@ -19,10 +19,11 @@ export class OmnibatteryPlanCard extends BaseCard {
   private extended = false;
   private observer?: ResizeObserver;
   private resizeFrame?: number;
+  private observedChart?: Element;
   static styles = [BaseCard.styles, css`
     :host { --plot-label: var(--ob-secondary); }
     .ob-header { margin-bottom: 12px; }
-    .topline { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+    .topline { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
     .period { color:var(--ob-secondary); font-size:12px; }
     .range { display:flex; gap:2px; padding:3px; background:var(--ob-subtle); border-radius:8px; }
     .range button { border:0; background:transparent; padding:5px 9px; border-radius:5px; font-size:12px; }
@@ -63,13 +64,29 @@ export class OmnibatteryPlanCard extends BaseCard {
   connectedCallback() {
     super.connectedCallback();
     this.observer = new ResizeObserver(entries => {
-      const measured = Math.max(260, Math.floor(entries[0].contentRect.width - 40));
+      const entry = entries.find(item => item.target === this.observedChart);
+      if (!entry || entry.contentRect.width <= 0) return;
+      const measured = Math.max(1, Math.floor(entry.contentRect.width));
       if (this.resizeFrame !== undefined) cancelAnimationFrame(this.resizeFrame);
       this.resizeFrame = requestAnimationFrame(() => { if (this.width !== measured) this.width = measured; });
     });
-    this.observer.observe(this);
+    this.requestUpdate();
   }
-  disconnectedCallback() { if (this.resizeFrame !== undefined) cancelAnimationFrame(this.resizeFrame); this.observer?.disconnect(); super.disconnectedCallback(); }
+  protected updated() {
+    // The chart appears after discovery and can be replaced on reconnect.
+    // Its own content box reflects theme/config padding and border changes.
+    const chart = this.renderRoot.querySelector('.chart') ?? undefined;
+    if (chart === this.observedChart) return;
+    if (this.resizeFrame !== undefined) cancelAnimationFrame(this.resizeFrame);
+    this.observer?.disconnect();
+    this.observedChart = chart;
+    if (chart) this.observer?.observe(chart);
+  }
+  disconnectedCallback() {
+    if (this.resizeFrame !== undefined) cancelAnimationFrame(this.resizeFrame);
+    this.observer?.disconnect(); this.observedChart = undefined;
+    super.disconnectedCallback();
+  }
   private get plotLeft() { return this.width<450?60:84; }
 
   private path(values: (number | null)[], x: (index: number) => number, y: (value: number) => number) {
@@ -205,7 +222,7 @@ export class OmnibatteryPlanCard extends BaseCard {
     const left=this.plotLeft,right=this.width-10;
     const nowX=left+(timeline.currentIndex+timeline.currentProgress)/count*(right-left);
     const selectedX=left+(selected+.5)/count*(right-left);
-    const tickStep = right-left<400 ? (count>96?72:48) : 24;
+    const tickStep = right-left<180 ? count : right-left<400 ? (count>96?72:48) : 24;
     const ticks = Array.from({length:Math.ceil(count/tickStep)},(_,i)=>i*tickStep).filter(i=>i===0 || count-i>=tickStep*.7);
     ticks.push(count);
     const activeSeries=[...power.filter(s=>!s.forecast),soc[0],...(hasPrices?prices:[])].filter(s=>s.values.some(v=>v!=null)||[...power,...soc].find(p=>p.label===s.label&&p.forecast)?.values.some(v=>v!=null));
