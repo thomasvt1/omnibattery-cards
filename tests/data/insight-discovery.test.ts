@@ -8,6 +8,14 @@ const config: CardConfig = { type: 'custom:omnibattery-price-windows-card' };
 const setup = () => createDemo('solar', now);
 
 describe('insight source discovery', () => {
+  it('keeps import tariffs opt-in for other cards, including export-only plans', () => {
+    const { hass, registry } = setup();
+    for (const type of ['custom:omnibattery-plan-card', 'custom:omnibattery-daily-operation-card'] as const) {
+      expect(buildSnapshot(hass, registry, { type, export_price_entity: 'sensor.export' }, now).importPrices).toBeUndefined();
+      expect(buildSnapshot(hass, registry, { type, import_price_entity: 'sensor.demo_import_price' }, now).importPrices?.entityId).toBe('sensor.demo_import_price');
+    }
+  });
+
   it('finds a unique timestamped price source and saved forecast without manual configuration', () => {
     const { hass, registry } = setup();
     const snapshot = buildSnapshot(hass, registry, config, now);

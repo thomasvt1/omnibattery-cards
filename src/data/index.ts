@@ -59,7 +59,8 @@ export function buildSnapshot(hass: HomeAssistant, registry: RegistryData, confi
     daily: { solar: system('dailySolar', 'energy'), home: system('dailyHome', 'energy'), gridImport: system('dailyGridImport', 'energy'),
       gridExport: system('dailyGridExport', 'energy'), charge: aggregate('dailyCharge', 'dailyCharge', 'energy'), discharge: aggregate('dailyDischarge', 'dailyDischarge', 'energy') },
     batteries, status: buildStatus(discovery, batteries, timeline), timeline,
-    importPrices: parsePrices(insightSources.importPrice, hass.config?.currency),
+    importPrices: parsePrices(config.import_price_entity || config.type === 'custom:omnibattery-price-windows-card'
+      ? insightSources.importPrice : undefined, hass.config?.currency),
     exportPrices: parsePrices(config.export_price_entity ? hass.states[config.export_price_entity] : undefined, hass.config?.currency),
   };
   if (!discovery.entities.length && !discovery.error && !Object.keys(config.entities ?? {}).length)
