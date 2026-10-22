@@ -1,5 +1,7 @@
 {
   "name": "Omnibattery Cards",
-  "filename": "omnibattery-cards.js",
-  "homeassistant": "2026.10.0"
+  "homeassistant": "2026.10.0",
+  "zip_release": true,
+  "hide_default_branch": true,
+  "filename": "omnibattery_cards.zip"
 }

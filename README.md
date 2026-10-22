@@ -4,7 +4,7 @@
 
 Ten compact, display-only Home Assistant dashboard cards for [Omnibattery](https://github.com/ffunes/Omnibattery), inspired by the energy dashboards in [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion).
 
-[![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasvt1&repository=omnibattery-cards&category=plugin)
+[![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasvt1&repository=omnibattery-cards&category=integration)
 
 | Card | What it shows |
 | --- | --- |
@@ -58,25 +58,48 @@ Cards follow the active Home Assistant theme. They can open entity details, but 
 
 - Home Assistant **2026.10 or newer**.
 - [Omnibattery](https://github.com/ffunes/Omnibattery) **1.5.0** with its entities enabled. Other versions may work if they retain the same entity and timeline interfaces.
-- HACS for the recommended installation, or access to your Home Assistant `www` directory for manual installation.
+- HACS for the recommended installation, or access to your Home Assistant `custom_components` directory for manual installation.
 - Optional: a Nord Pool price sensor exposing timestamped `raw_today` and `raw_tomorrow` attributes.
 
 ## Install with HACS
 
-Use the **Add to HACS** button above to open this repository in your Home Assistant instance, or add it manually:
+Version 0.6.0 combines the cards and their recording sensors in **one HACS Integration**. It remains independent of upstream Omnibattery.
 
-1. Open **HACS → ⋮ → Custom repositories**.
-2. Add `https://github.com/thomasvt1/omnibattery-cards` with type **Dashboard**.
-3. Find **Omnibattery Cards**, download the latest release, then reload the browser.
-4. In your dashboard, choose **Edit → Add card**, then search for **Omnibattery**.
+1. Open the **Add to HACS** link above, or add `https://github.com/thomasvt1/omnibattery-cards` as a custom repository with type **Integration**.
+2. Download **Omnibattery Cards**, then restart Home Assistant.
+3. Add **Omnibattery Cards** in **Settings → Devices & services → Add integration** ([open setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=omnibattery_cards)). Confirm the timeline; calculated Solar Independence is optional.
+4. Reload the browser. The integration registers the bundled cards automatically. Add them through **Edit dashboard → Add card → Omnibattery**.
 
-HACS normally adds the JavaScript module resource automatically. If the cards are missing, check **Settings → Dashboards → ⋮ → Resources** for `/hacsfiles/omnibattery-cards/omnibattery-cards.js` with type **JavaScript module**. An existing URL with a `hacstag` query is valid; do not add a duplicate.
+This is a custom repository, not yet included in HACS's default catalogue.
 
-This is a HACS custom repository. It is not part of HACS's default catalog. See the [HACS custom repository instructions](https://www.hacs.xyz/docs/faq/custom_repositories/) for help.
+**Updates:** Python integration changes require a Home Assistant restart. Frontend-only changes can be loaded with a full browser refresh after the bundle is replaced; the integration serves it without long-lived caching. HACS may still request a restart for an Integration update. Local development retains Vite hot reload through `npm run dev`.
 
-### Manual installation
+### Migrate from the Dashboard download (0.5.x or earlier)
 
-Download `omnibattery-cards.js` from the [latest release](https://github.com/thomasvt1/omnibattery-cards/releases/latest), place it in `config/www/omnibattery-cards/`, and add `/local/omnibattery-cards/omnibattery-cards.js` as a **JavaScript module** dashboard resource. Reload the browser after replacing the file during upgrades.
+HACS cannot install one repository under two categories. This category change needs a one-time reinstall; a normal Dashboard update is not sufficient.
+
+1. Keep your dashboard configurations. In HACS, remove the old **Omnibattery Cards Dashboard download**, then remove its custom-repository entry if it remains. Do not delete your dashboard cards.
+2. Add the same repository as an **Integration**, download it, restart Home Assistant, and complete integration setup as above.
+3. Setup replaces recognized old HACS/manual resource URLs with `/omnibattery_cards/omnibattery-cards.js?v=0.6.0`, preserving one resource ID and removing duplicate entries. Query strings such as `hacstag` are ignored when identifying old URLs. Other cards and dashboard configurations are untouched.
+4. Reload every open Home Assistant browser tab. Existing `custom:omnibattery-*` card types and settings continue to work.
+
+Recognized old paths are `/hacsfiles/omnibattery-cards/omnibattery-cards.js`, `/local/community/omnibattery-cards/omnibattery-cards.js`, `/local/omnibattery-cards/omnibattery-cards.js`, and `/local/omnibattery-cards.js`. If you used a renamed file, an absolute URL, or another path, remove that resource yourself before setup; it cannot safely be identified automatically. The integration saves the original recognized resource entries in its own migration backup before changing them, and uses Home Assistant's resource collection API.
+
+For **YAML-managed resources**, Home Assistant will show a repair instruction instead of adding a duplicate. Replace the old entries with exactly one resource:
+
+```yaml
+resources:
+  - url: /omnibattery_cards/omnibattery-cards.js?v=0.6.0
+    type: module
+```
+
+Reload Lovelace resources and your browser; reload the integration to clear the repair. Update the version query on later releases. YAML dashboard layouts can still use automatically registered resources when resource management itself is in storage/UI mode.
+
+### Manual installation and rollback
+
+Extract `omnibattery_cards.zip` from the [latest release](https://github.com/thomasvt1/omnibattery-cards/releases/latest) into `config/custom_components/omnibattery_cards/`, restart, and add the integration. The archive contains the compiled cards, so no separate JavaScript download is needed.
+
+To roll back to standalone cards, remove the unified integration through Devices & services, remove its `/omnibattery_cards/` resource in Dashboard Resources (or YAML), reinstall the **v0.5.0** Dashboard release in HACS, and refresh the browser. Removing the integration deletes recordings; keep a Home Assistant backup if those need preserving. Switching back also requires removing the Integration repository entry in HACS before re-adding it as Dashboard.
 
 ## Configure
 
@@ -192,7 +215,7 @@ Missing, stale, previous-day, or incomplete forecast data stays unavailable. A k
 
 ### Solar independence
 
-For automatic recording, [install the separate Omnibattery Cards Companion](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasvt1&repository=omnibattery-companion&category=integration), then add it under Settings → Devices & services. It suggests the Energy dashboard's grid, solar, and battery power meters. Explicitly enable calculated Solar Independence during setup. The card discovers its sensors, labels the percentages as calculated, and uses counters from the same observed period. Solar-first attribution is an estimate, not measured energy provenance. Missing readings and restart gaps are excluded and disclosed; recording starts after setup. Manual measured counters remain supported below.
+For automatic recording, [set up the bundled recording integration](https://my.home-assistant.io/redirect/config_flow_start/?domain=omnibattery_cards) under Settings → Devices & services. It suggests the Energy dashboard's grid, solar, and battery power meters. Explicitly enable calculated Solar Independence during setup. The card discovers its sensors, labels the percentages as calculated, and uses counters from the same observed period. Solar-first attribution is an estimate, not measured energy provenance. Missing readings and restart gaps are excluded and disclosed; recording starts after setup. Manual measured counters remain supported below.
 
 ```yaml
 type: custom:omnibattery-solar-independence-card
@@ -220,7 +243,7 @@ Without an override, price sources are discovered from `raw_today` / `raw_tomorr
 
 ### Forecast accuracy
 
-The [companion integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasvt1&repository=omnibattery-companion&category=integration) saves future quarter-hour forecasts before measurement and retains them across restarts. The card discovers the matching snapshot automatically. After installation and setup, allow a complete saved interval to finish (up to 30 minutes); past forecasts cannot be reconstructed. Both this card and its editor offer install/setup links when support is missing.
+The [bundled recording integration](docs/recordings.md) saves future quarter-hour forecasts before measurement and retains them across restarts. The card discovers the matching snapshot automatically. After installation and setup, allow a complete saved interval to finish (up to 30 minutes); past forecasts cannot be reconstructed. Both this card and its editor offer install/setup links when support is missing.
 
 ```yaml
 type: custom:omnibattery-forecast-accuracy-card
@@ -336,14 +359,16 @@ npm run update:examples
 npm run validate:previews
 ```
 
-The build produces one self-contained `dist/omnibattery-cards.js`. Demo fixtures use synthetic names and data; do not commit household identifiers, private Home Assistant URLs, credentials, or raw diagnostics.
+The build produces one self-contained `dist/omnibattery-cards.js` and copies it into the integration's `frontend` folder for packaging. HACS offers release archives only; a source checkout needs `npm run build` before installation. Demo fixtures use synthetic names and data; do not commit household identifiers, private Home Assistant URLs, credentials, or raw diagnostics.
+
+For integration tests, use Python 3.13: `pip install -r requirements-test.txt`, then `pytest -q` after building the cards. The tests cover real Home Assistant setup, recordings, resource migration, and HTTP bundle serving. The optional private MCP replay is skipped without an explicit fixture path.
 
 Run `npm run update:examples` after changing a card's appearance. The script starts and stops its own local demo server and Chromium browser, then writes PNGs directly to `examples/`: every registered card in light and dark themes, all three System battery layouts, and desktop/light and mobile/dark dashboards. It uses a fixed demo time, locale, timezone, and viewport sizes for repeatable captures. Install Chromium with `npx playwright install chromium` before the first run, and commit the regenerated PNGs with the change. If a newly registered card is missing from the demo, the script fails so its fixture can be added.
 
-CI checks types, unit tests, the production build, browser tests, and example generation. To release, update `package.json` and the lockfile version together, add a changelog entry, and push a matching `vX.Y.Z` tag. The release workflow verifies the version, runs checks, builds, and attaches `omnibattery-cards.js` to a GitHub release for HACS.
+CI checks types, unit tests, the production build, browser tests, and example generation. To release, update `package.json`, the lockfile, and the integration manifest version together, add a changelog entry, and push a matching `vX.Y.Z` tag. The release workflow verifies the version, runs checks, builds, and packages the built cards inside `omnibattery_cards.zip` for HACS Integration installation; the JavaScript asset is also retained for explicit legacy/manual use.
 
 ## Credits and license
 
-Omnibattery Cards is an independent frontend project. [Omnibattery](https://github.com/ffunes/Omnibattery) supplies the battery integration and telemetry. [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion) inspired the compact dashboard layout and timeline presentation. Home Assistant and HACS provide the dashboard and distribution platforms.
+Omnibattery Cards is an independent cards and recording integration project. [Omnibattery](https://github.com/ffunes/Omnibattery) supplies the battery integration and telemetry. [EMHASS HA Companion](https://github.com/smefa/emhass-ha-companion) inspired the compact dashboard layout and timeline presentation. Home Assistant and HACS provide the dashboard and distribution platforms.
 
 Licensed under [GNU AGPL version 3 or later](LICENSE). The frontend uses Lit, distributed under its BSD 3-Clause license; dependency notices are retained in the build where applicable. The cards do not implement energy optimization or hardware control.
