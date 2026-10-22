@@ -1,9 +1,9 @@
-## Single HACS Integration install
+## Fix integration dashboard visibility
 
-Omnibattery Cards now includes its recording integration and automatically registers the bundled cards. Forecast snapshots and optional calculated Solar Independence are configured under Settings → Devices & services → Omnibattery Cards.
+Omnibattery Cards was incorrectly classified as a helper in v0.6.0. It could be loaded and show its device while remaining absent from Settings → Devices & services → Integrations.
 
-**Existing Dashboard users:** remove the old HACS Dashboard download/custom-repository entry, add this same repository as **Integration**, download, restart Home Assistant, and add the integration. Keep your dashboard configurations. Setup migrates known old resources and removes duplicates. Refresh every open browser tab afterward.
+This release classifies it as a service. Update in HACS and restart Home Assistant so its manifest is reloaded, then refresh the browser. **Do not remove or recreate the integration.** Existing devices, entity IDs, settings, and recordings are preserved.
 
-YAML-managed resources require a one-time URL replacement; setup shows a repair instruction and does not register a duplicate. Renamed files and absolute/custom resource paths must be removed manually. See the README for exact paths, migration, and rollback instructions.
+The frontend console banner now reads its version from the integration manifest during the build.
 
-Install `omnibattery_cards.zip` through HACS. The separate companion repository is retired. No changes are required in upstream Omnibattery.
+Verified with a failing-then-passing test through Home Assistant’s actual WebSocket integration-type filter. Users upgrading from the older standalone Dashboard releases should follow the existing README migration instructions.

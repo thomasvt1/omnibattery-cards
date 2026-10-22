@@ -13,9 +13,9 @@
     "lovelace"
   ],
   "documentation": "https://github.com/thomasvt1/omnibattery-cards",
-  "integration_type": "helper",
+  "integration_type": "service",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/thomasvt1/omnibattery-cards/issues",
   "requirements": [],
-  "version": "0.6.0"
+  "version": "0.6.1"
 }

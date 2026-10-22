@@ -9,6 +9,7 @@ import { OmnibatteryBatteryCard } from './cards/battery-card';
 import { OmnibatteryStatusCard } from './cards/status-card';
 import { OmnibatterySystemBatteryCard } from './cards/system-battery-card';
 import { OmnibatteryCardEditor } from './editor';
+import { version } from '../custom_components/omnibattery_cards/manifest.json';
 
 const cards = [
   ['omnibattery-daily-operation-card', OmnibatteryDailyOperationCard, 'Omnibattery Daily Operation', 'Quarter-hour operation, charge level, battery energy, consumption, and tariffs.'],
@@ -29,4 +30,4 @@ for (const [type, element, name, description] of cards) {
   if(!window.customCards.some(card=>card.type===type)) window.customCards.push({type,name,description,preview:true});
 }
 if(!customElements.get('omnibattery-card-editor')) customElements.define('omnibattery-card-editor',OmnibatteryCardEditor);
-console.info('OMNIBATTERY CARDS 0.6.0 · Read-only energy insights');
+console.info(`OMNIBATTERY CARDS ${version} · Read-only energy insights`);
