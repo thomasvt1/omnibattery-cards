@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.2 — 2026-10-22
+
+- Automatically discover compatible timestamped price sources, saved forecast snapshots, and Omnibattery daily grid-to-home counters, including renamed entities.
+- Explain ambiguous sources and missing specialized data; preserve explicit selections and grid-charging safeguards.
+- Refresh automatically selected sources when their state changes and add discovery and browser regression coverage.
+
 ## 0.4.1 — 2026-10-22
 
 - Align Daily operation charge-level bars and percentages across recorded and planned rows, including rows with stored energy in kWh.
