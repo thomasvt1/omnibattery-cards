@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+
+- Solar Independence reads existing Energy dashboard statistics, including multiple solar meters, grid tariffs, and battery charge/discharge, without creating helper sensors.
+- Forecast snapshots stay in internal persistent storage and are read directly by the card.
+- Upgrade migration preserves forecasts and renamed snapshot references, removes the seven owned legacy helper types, and keeps resource registration deduplicated.
+- Simplified setup and editor; allocation estimates and incomplete statistics are disclosed.
+
+
 ## 0.6.1 — 2026-10-22
 
 - Classify Omnibattery Cards as a service so configured entries appear on the Integrations dashboard instead of only under Helpers. Existing devices, entities, settings, and recordings are preserved.

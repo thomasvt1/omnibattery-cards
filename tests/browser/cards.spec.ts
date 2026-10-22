@@ -320,8 +320,8 @@ test('entity details stay read-only and registry subscriptions are released', as
   await expect(page.locator('omnibattery-card-editor').getByLabel('Omnibattery installation')).toBeVisible();
   const before = await page.evaluate(() => (document.querySelector('omnibattery-plan-card') as CardElement).hass.__demoDiagnostics);
   expect(before.services).toEqual([]);
-  expect([...new Set(before.requests)].sort()).toEqual(['config/device_registry/list', 'config/entity_registry/list']);
-  expect(before.requests).toHaveLength(2);
+  expect([...new Set(before.requests)].sort()).toEqual(['config/device_registry/list', 'config/entity_registry/list', 'energy/get_prefs', 'omnibattery_cards/recordings', 'recorder/statistics_during_period']);
+  expect(before.requests.filter(type => type.startsWith('config/'))).toHaveLength(2);
   expect(before.activeSubscriptions).toBe(2);
   const remaining = await page.evaluate(async () => {
     const diagnostics = (document.querySelector('omnibattery-plan-card') as CardElement).hass.__demoDiagnostics;

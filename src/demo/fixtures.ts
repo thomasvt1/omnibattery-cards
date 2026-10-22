@@ -166,6 +166,23 @@ export function createDemo(scenario: DemoScenario = 'solar', now = new Date()): 
       if (type.includes('service')) diagnostics.services.push(type);
       if (type === 'config/entity_registry/list') return registry.entities as T;
       if (type === 'config/device_registry/list') return registry.devices as T;
+      if (type === 'omnibattery_cards/recordings') return (scenario === 'missing' ? [] : [{
+        timeline: 'sensor.demo_timeline', legacy_entity_ids: ['sensor.demo_saved_forecast'],
+        forecast: states['sensor.demo_saved_forecast']?.attributes ?? {},
+      }]) as T;
+      if (type === 'energy/get_prefs') return {energy_sources: scenario === 'missing' ? [] : [
+        {type: 'grid', stat_energy_from: 'demo_import', stat_energy_to: 'demo_export'},
+        {type: 'solar', stat_energy_from: 'demo_solar'},
+        {type: 'battery', stat_energy_from: 'demo_discharge', stat_energy_to: 'demo_charge'},
+      ]} as T;
+      if (type === 'recorder/statistics_during_period') {
+        const start = Date.parse(String(message.start_time));
+        const end = Date.parse(String(message.end_time));
+        const count = Math.max(1, Math.ceil((end - start) / 3600000));
+        return Object.fromEntries(Object.entries({demo_import: 4, demo_export: 2, demo_solar: 12, demo_charge: 3, demo_discharge: 1})
+          .map(([id, total]) => [id, Array.from({length: count}, (_, i) => ({start: start + i * 3600000,
+            end: start + (i + 1) * 3600000, change: total / count}))])) as T;
+      }
       throw new Error(`Unsupported demo request: ${type}`);
     },
     connection: { subscribeEvents: async () => {

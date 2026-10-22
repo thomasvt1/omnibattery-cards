@@ -24,7 +24,8 @@ try {
     const weights=Array.from({length:32},(_,i)=>Math.sin((i+.5)/32*Math.PI));
     const total=weights.reduce((a,b)=>a+b,0);
     const intervals=weights.map((w,i)=>({start:new Date(Date.parse('2026-06-15T06:00:00Z')+i*900000).toISOString(),end:new Date(Date.parse('2026-06-15T06:00:00Z')+(i+1)*900000).toISOString(),solar_kwh:w/total*14}));
-    states['sensor.demo_saved_forecast'].attributes={schema_version:1,saved_at:'2026-06-15T06:00:00Z',intervals};
+    states['sensor.preview_saved_forecast']={...states['sensor.demo_saved_forecast'], entity_id:'sensor.preview_saved_forecast'};
+    states['sensor.preview_saved_forecast'].attributes={schema_version:1,saved_at:'2026-06-15T06:00:00Z',intervals};
     for(let i=0;i<96;i++) {
       series.solar_actual_kwh[i]=i>=24&&i<56?weights[i-24]/total*12.8:null;
       series.solar_actual_coverage_s[i]=i>=24&&i<56?900:0;
@@ -38,7 +39,7 @@ try {
       for(const name of names) {
         const wrapper=document.createElement('div');
         const card=document.createElement(`omnibattery-${name}-card`);
-        card.setConfig(window.demo.getConfig(name));card.hass={...source,states};
+        card.setConfig({...window.demo.getConfig(name), ...(name === 'forecast-accuracy' ? {saved_forecast_entity:'sensor.preview_saved_forecast'} : {})});card.hass={...source,states};
         const label=document.createElement('p');label.className='preview-label';label.textContent=`${String(names.indexOf(name)+1).padStart(2,'0')}  ${name.replaceAll('-',' ')}`;
         wrapper.append(label,card);section.append(wrapper);
       }
