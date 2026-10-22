@@ -269,7 +269,7 @@ export class OmnibatteryCardEditor extends LitElement {
             <span>Show next-day timeline when available</span>
           </label>` : nothing}
         ${this.renderAppearance()}
-        <details>
+        ${!isSolar ? html`<details>
           <summary>Entity overrides</summary>
           <p class="help">Optional. Use these when discovery cannot identify a source, or to select another sensor. Empty fields restore automatic discovery.</p>
           ${(isOperation ? sources.filter(([key]) => key === 'timeline') : isEnergyToday ? [...systemMetrics.filter(([key]) => key.startsWith('daily')), ...sources.filter(([key]) => key === 'timeline')] : isSolar ? systemMetrics.filter(([key]) => ['dailySolar', 'dailyHome', 'dailyGridImport', 'dailyGridExport'].includes(key)) : isAccuracy ? sources.filter(([key]) => key === 'timeline') : isPrice ? [] : isBattery ? batteryMetrics : isSystemBattery ? systemBatteryMetrics : sources).map(([key, label, help]) => this.entityField(key, label, help))}
@@ -279,7 +279,7 @@ export class OmnibatteryCardEditor extends LitElement {
           </label>` : nothing}
           ${!isOperation && !isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isBattery && !isPlan && !isSystemBattery ? systemMetrics.map(([key, label, help]) => this.entityField(key, label, help)) : nothing}
           ${!isOperation && !isEnergyToday && !isSolar && !isPrice && !isAccuracy && !isSystemBattery && (isBattery || !isPlan) ? html`<p class="help">Explicit battery-cell and AC power overrides must be positive when charging and negative when discharging. AC and cell power are kept separate.</p>` : nothing}
-        </details>
+        </details>` : nothing}
         <datalist id="entities">${stateIds.map(id => html`<option value=${id}>${String(this.hass?.states[id].attributes.friendly_name ?? id)}</option>`)}</datalist>
       </div>`;
   }
