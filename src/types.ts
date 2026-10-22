@@ -92,6 +92,7 @@ export interface Snapshot {
   importPrices?: PriceSeries; exportPrices?: PriceSeries;
 }
 export interface InsightSources {
+  companionInstalled: boolean;
   importPrice?: HassEntity; savedForecast?: HassEntity; gridToHome?: HassEntity;
   importPriceError?: string; savedForecastError?: string; gridToHomeError?: string;
   entityIds: string[];

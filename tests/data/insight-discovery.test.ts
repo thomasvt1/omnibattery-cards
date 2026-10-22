@@ -8,6 +8,25 @@ const config: CardConfig = { type: 'custom:omnibattery-price-windows-card' };
 const setup = () => createDemo('solar', now);
 
 describe('insight source discovery', () => {
+  it('discovers companion outputs by contract and scopes them to the selected timeline', () => {
+    const { hass, registry } = setup();
+    delete hass.states['sensor.demo_saved_forecast'];
+    for (const source of ['sensor.demo_timeline', 'sensor.other_timeline']) {
+      for (const kind of ['grid_to_home', 'saved_forecast']) {
+        const entity_id = `${source}_${kind}`;
+        hass.states[entity_id] = {entity_id, state: 'unavailable', attributes: {
+          companion_schema: 1, companion_kind: kind, source_timeline: source,
+        }};
+      }
+    }
+    const result = buildSnapshot(hass, registry, config, now).insightSources;
+    expect(result.companionInstalled).toBe(true);
+    expect(result.savedForecast?.entity_id).toBe('sensor.demo_timeline_saved_forecast');
+    expect(result.gridToHome?.entity_id).toBe('sensor.demo_timeline_grid_to_home');
+    expect(result.entityIds).toContain('sensor.demo_timeline_saved_forecast');
+    expect(result.savedForecastError).toBeUndefined();
+  });
+
   it('keeps import tariffs opt-in for other cards, including export-only plans', () => {
     const { hass, registry } = setup();
     for (const type of ['custom:omnibattery-plan-card', 'custom:omnibattery-daily-operation-card'] as const) {

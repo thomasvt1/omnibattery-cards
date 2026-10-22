@@ -2,6 +2,7 @@ import { appearanceFields, basicAppearanceFields, advancedAppearanceFields, vali
 import { LitElement, css, html, nothing, type PropertyValues } from 'lit';
 import { loadRegistry, watchRegistry } from './connection';
 import type { Appearance, CardConfig, HomeAssistant, RegistryData, RegistryEntity } from './types';
+import { companionSetup } from './companion';
 
 type Override = readonly [key: string, label: string, help?: string];
 
@@ -255,11 +256,13 @@ export class OmnibatteryCardEditor extends LitElement {
         ${isEnergyToday ? html`<label class="toggle"><input type="checkbox" .checked=${config.show_forecasts !== false} @change=${(event: Event) => this.updateConfig('show_forecasts', (event.target as HTMLInputElement).checked)} /><span>Show remaining forecasts</span></label>` : nothing}
         ${isPrice ? this.entityField('import_price_entity', 'Import price entity', 'Automatic when one timestamped price source is found. Select one if multiple tariffs exist.', true) : nothing}
         ${isAccuracy ? html`
+          ${companionSetup(Object.values(this.hass?.states ?? {}).some(entity => entity.attributes.companion_schema === 1))}
           ${this.entityField('saved_forecast_entity', 'Saved forecast entity', 'Automatically finds a unique schema 1 saved snapshot. Live forecasts are not snapshots; see README for the required format.', true)}
           <label class="field" for="forecast-metric"><span id="forecast-metric-label">Forecast metric</span><select id="forecast-metric" aria-labelledby="forecast-metric-label" @change=${(event: Event) => this.updateConfig('forecast_metric', this.inputValue(event))}>
             <option value="solar" .selected=${config.forecast_metric !== 'home'}>Solar</option><option value="home" .selected=${config.forecast_metric === 'home'}>Consumption</option>
           </select></label>` : nothing}
         ${isSolar ? html`
+          ${companionSetup(Object.values(this.hass?.states ?? {}).some(entity => entity.attributes.companion_schema === 1))}
           ${this.entityField('dailyGridToHome', 'Grid-to-home energy today', 'Automatically finds an Omnibattery daily grid-to-home counter when available. Other counters must be selected and exclude battery charging.')}
           <label class="toggle"><input type="checkbox" .checked=${config.assume_no_grid_charging === true} @change=${(event: Event) => this.updateConfig('assume_no_grid_charging', (event.target as HTMLInputElement).checked)} /><span>Assume no grid charging</span></label>
           <label class="toggle"><input type="checkbox" .checked=${config.assume_solar_only_export === true} @change=${(event: Event) => this.updateConfig('assume_solar_only_export', (event.target as HTMLInputElement).checked)} /><span>Assume solar-only export</span></label>` : nothing}

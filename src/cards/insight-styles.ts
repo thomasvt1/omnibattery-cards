@@ -5,6 +5,8 @@ export const insightStyles = css`
   .hero-unit { font-size: 19px; font-weight: 400; letter-spacing: 0; }
   .caption { font-size: 15px; margin-top: 2px; }
   .footnote { color: var(--ob-secondary); font-size: 12px; margin-top: 14px; }
+  .companion-setup a { color: var(--primary-color, #03a9f4); text-underline-offset: 3px; }
+  .companion-setup a:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 3px; }
   .teal { color: var(--ob-battery); } .amber { color: var(--ob-solar); } .purple { color: var(--ob-price); }
   svg.chart { display: block; width: 100%; height: 155px; margin: 14px 0 8px; overflow: visible; }
   svg text { fill: var(--ob-secondary); font-size: 11px; font-family: inherit; }

@@ -192,6 +192,8 @@ Missing, stale, previous-day, or incomplete forecast data stays unavailable. A k
 
 ### Solar independence
 
+For automatic recording, [install the separate Omnibattery Cards Companion](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasvt1&repository=omnibattery-companion&category=integration), then add it under Settings → Devices & services. It suggests the Energy dashboard's grid, solar, and battery power meters. Explicitly enable calculated Solar Independence during setup. The card discovers its sensors, labels the percentages as calculated, and uses counters from the same observed period. Solar-first attribution is an estimate, not measured energy provenance. Missing readings and restart gaps are excluded and disclosed; recording starts after setup. Manual measured counters remain supported below.
+
 ```yaml
 type: custom:omnibattery-solar-independence-card
 entities:
@@ -217,6 +219,8 @@ Shows today's tariff chart and the cheapest/most expensive complete upcoming two
 Without an override, price sources are discovered from `raw_today` / `raw_tomorrow` attributes. A unique source is selected automatically; multiple sources require a choice in the editor because their taxes, export rates, or other costs can differ. An explicitly configured export source is excluded from automatic import selection. An unavailable source is never silently replaced by a different tariff.
 
 ### Forecast accuracy
+
+The [companion integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasvt1&repository=omnibattery-companion&category=integration) saves future quarter-hour forecasts before measurement and retains them across restarts. The card discovers the matching snapshot automatically. After installation and setup, allow a complete saved interval to finish (up to 30 minutes); past forecasts cannot be reconstructed. Both this card and its editor offer install/setup links when support is missing.
 
 ```yaml
 type: custom:omnibattery-forecast-accuracy-card

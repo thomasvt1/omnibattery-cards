@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 — 2026-10-22
+
+- Offer install and setup links for the independent Omnibattery Cards Companion in Forecast Accuracy, Solar Independence, and their editors.
+- Discover companion sensors by their source timeline, including renamed and temporarily unavailable entities.
+- Show calculated Solar Independence using the companion's aligned recording periods, with explicit allocation labels and missing-data coverage.
+- Validate per-interval forecast capture timestamps and preserve recorded snapshots as the comparison baseline.
+
 ## 0.4.2 — 2026-10-22
 
 - Automatically discover compatible timestamped price sources, saved forecast snapshots, and Omnibattery daily grid-to-home counters, including renamed entities.
