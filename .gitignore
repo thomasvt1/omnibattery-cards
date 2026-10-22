@@ -9,3 +9,6 @@ test-results/
 .impeccable/config.local.json
 .local/
 *.log
+__pycache__/
+.pytest_cache/
+custom_components/omnibattery_cards/frontend/

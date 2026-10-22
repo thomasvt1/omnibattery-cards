@@ -1,0 +1,82 @@
+{
+  "title": "Omnibattery Cards",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up card recordings",
+        "description": "Registers the bundled dashboard cards automatically. Records future forecasts before measurement. Optional Solar Independence uses measured AC flows with a solar-first allocation model; it is calculated, not directly metered source attribution. Confirm the Energy dashboard suggestions cover the same AC system and contain no overlapping totals. Counters start now; no history is fabricated.",
+        "data": {
+          "timeline": "Omnibattery daily operation timeline",
+          "enable_independence": "Enable calculated Solar Independence (solar and battery serve home before grid)",
+          "grid_power": "Grid power meters (positive import)",
+          "solar_power": "Solar production power meters (positive generation)",
+          "charge_power": "Battery AC charging power meters (positive charging)",
+          "discharge_power": "Battery AC discharging power meters (positive discharging)",
+          "grid_inverted": "Grid meters report export as positive"
+        }
+      }
+    },
+    "error": {
+      "invalid_timeline": "Select an Omnibattery schema 1 timeline with 96 quarter-hour intervals.",
+      "duplicate_power": "Do not select the same power sensor twice or for multiple roles.",
+      "missing_power": "Calculated independence needs grid, solar, battery charge and battery discharge power sources.",
+      "invalid_power": "Every selected power sensor must currently report W or kW. Solar and battery channels must be non-negative."
+    },
+    "abort": {
+      "already_configured": "This timeline is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Recording sources",
+        "description": "Records future forecasts before measurement. Optional Solar Independence uses measured AC flows with a solar-first allocation model; it is calculated, not directly metered source attribution. Confirm the Energy dashboard suggestions cover the same AC system and contain no overlapping totals. Counters start now; no history is fabricated. Changing sources starts a new recording period.",
+        "data": {
+          "enable_independence": "Enable calculated Solar Independence (solar and battery serve home before grid)",
+          "grid_power": "Grid power meters (positive import)",
+          "solar_power": "Solar production power meters (positive generation)",
+          "charge_power": "Battery AC charging power meters (positive charging)",
+          "discharge_power": "Battery AC discharging power meters (positive discharging)",
+          "grid_inverted": "Grid meters report export as positive"
+        }
+      }
+    },
+    "error": {
+      "invalid_timeline": "Select an Omnibattery schema 1 timeline with 96 quarter-hour intervals.",
+      "duplicate_power": "Do not select the same power sensor twice or for multiple roles.",
+      "missing_power": "Calculated independence needs grid, solar, battery charge and battery discharge power sources.",
+      "invalid_power": "Every selected power sensor must currently report W or kW. Solar and battery channels must be non-negative."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "saved_forecast": {
+        "name": "Saved forecast"
+      },
+      "daily_home": {
+        "name": "Home energy today"
+      },
+      "daily_solar": {
+        "name": "Solar energy today"
+      },
+      "daily_grid_import": {
+        "name": "Grid import today"
+      },
+      "daily_grid_export": {
+        "name": "Grid export today"
+      },
+      "daily_grid_to_home": {
+        "name": "Calculated grid to home today"
+      },
+      "daily_solar_to_grid": {
+        "name": "Calculated solar to grid today"
+      }
+    }
+  },
+  "issues": {
+    "yaml_resource": {
+      "title": "Update the Omnibattery Cards YAML resource",
+      "description": "Dashboard resources are managed in YAML. Replace all old Omnibattery Cards resource entries with exactly one entry using URL `{url}` and type `module`, then reload Lovelace resources and refresh your browser. Leave other cards unchanged. Automatic registration is paused to avoid loading duplicate scripts. See the repository migration instructions."
+    }
+  }
+}

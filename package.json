@@ -1,12 +1,12 @@
 {
   "name": "omnibattery-cards",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Read-only Home Assistant energy cards for Omnibattery",
   "type": "module",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/package-integration.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "tsc --noEmit",

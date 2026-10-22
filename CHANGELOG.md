@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — 2026-10-22
+
+- Combine recording sensors and cards into one HACS Integration download in this repository.
+- Register the bundled cards automatically, migrate known legacy resource URLs, and deduplicate resources across setup, reload, and late HACS registration.
+- Preserve existing dashboard card types and configurations. YAML-managed resources receive repair instructions instead of duplicate registration.
+- Existing Dashboard installations must switch the HACS custom repository category to Integration; see README migration steps.
+
+
 ## 0.5.0 — 2026-10-22
 
 - Offer install and setup links for the independent Omnibattery Cards Companion in Forecast Accuracy, Solar Independence, and their editors.

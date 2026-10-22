@@ -1,0 +1,3 @@
+pytest-homeassistant-custom-component==0.13.285
+# HA 2025.10 pins aiodns 3.5, which needs the pre-5 pycares API.
+pycares==4.11.0

@@ -29,4 +29,4 @@ for (const [type, element, name, description] of cards) {
   if(!window.customCards.some(card=>card.type===type)) window.customCards.push({type,name,description,preview:true});
 }
 if(!customElements.get('omnibattery-card-editor')) customElements.define('omnibattery-card-editor',OmnibatteryCardEditor);
-console.info('OMNIBATTERY CARDS 0.5.0 · Read-only energy insights');
+console.info('OMNIBATTERY CARDS 0.6.0 · Read-only energy insights');
