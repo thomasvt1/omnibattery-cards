@@ -2,7 +2,6 @@ import { appearanceFields, basicAppearanceFields, advancedAppearanceFields, vali
 import { LitElement, css, html, nothing, type PropertyValues } from 'lit';
 import { loadRegistry, watchRegistry } from './connection';
 import type { Appearance, CardConfig, HomeAssistant, RegistryData, RegistryEntity } from './types';
-import { companionSetup } from './companion';
 
 type Override = readonly [key: string, label: string, help?: string];
 
@@ -215,13 +214,13 @@ export class OmnibatteryCardEditor extends LitElement {
 
     return html`
       <div class="editor">
-        <p class="intro">Select your Omnibattery installation. Leave entity fields empty to discover them automatically.</p>
+        <p class="intro">${isSolar ? "Uses your whole-home Energy dashboard configuration." : "Select your Omnibattery installation. Leave entity fields empty to discover them automatically."}</p>
         ${this.registryError ? html`<p class="notice" role="status">${this.registryError}</p>` : nothing}
         <label class="field" for="title"><span>Title</span>
           <input id="title" .value=${config.title ?? ''} placeholder="Default card title"
             @change=${(event: Event) => this.updateConfig('title', this.inputValue(event))} />
         </label>
-        <label class="field" for="integration"><span id="integration-label">Omnibattery installation</span>
+        ${!isSolar ? html`<label class="field" for="integration"><span id="integration-label">Omnibattery installation</span>
           <select id="integration" aria-labelledby="integration-label"
             @change=${(event: Event) => this.updateConfig('integration_id', this.inputValue(event))}>
             <option value="" .selected=${!config.integration_id}>Automatic</option>
@@ -232,7 +231,7 @@ export class OmnibatteryCardEditor extends LitElement {
             ${config.integration_id && !integrationIds.includes(config.integration_id)
               ? html`<option value=${config.integration_id} .selected=${true}>${config.integration_id} (unavailable)</option>` : nothing}
           </select>
-        </label>
+        </label>` : nothing}
         ${isSystemBattery ? html`
           <label class="field" for="layout"><span id="layout-label">Layout</span>
             <select id="layout" aria-labelledby="layout-label"
@@ -256,16 +255,12 @@ export class OmnibatteryCardEditor extends LitElement {
         ${isEnergyToday ? html`<label class="toggle"><input type="checkbox" .checked=${config.show_forecasts !== false} @change=${(event: Event) => this.updateConfig('show_forecasts', (event.target as HTMLInputElement).checked)} /><span>Show remaining forecasts</span></label>` : nothing}
         ${isPrice ? this.entityField('import_price_entity', 'Import price entity', 'Automatic when one timestamped price source is found. Select one if multiple tariffs exist.', true) : nothing}
         ${isAccuracy ? html`
-          ${companionSetup(Object.values(this.hass?.states ?? {}).some(entity => entity.attributes.companion_schema === 1))}
-          ${this.entityField('saved_forecast_entity', 'Saved forecast entity', 'Automatically finds a unique schema 1 saved snapshot. Live forecasts are not snapshots; see README for the required format.', true)}
+          <p class="help">Forecasts are saved internally by Omnibattery Cards. No saved-forecast sensor is needed.</p><a href="/config/integrations/integration/omnibattery_cards">Configure recordings</a>
+          ${this.entityField('saved_forecast_entity', 'Saved forecast entity', 'Optional external snapshot override. By default, uses the integration’s internal forecast recording for the selected timeline.', true)}
           <label class="field" for="forecast-metric"><span id="forecast-metric-label">Forecast metric</span><select id="forecast-metric" aria-labelledby="forecast-metric-label" @change=${(event: Event) => this.updateConfig('forecast_metric', this.inputValue(event))}>
             <option value="solar" .selected=${config.forecast_metric !== 'home'}>Solar</option><option value="home" .selected=${config.forecast_metric === 'home'}>Consumption</option>
           </select></label>` : nothing}
-        ${isSolar ? html`
-          ${companionSetup(Object.values(this.hass?.states ?? {}).some(entity => entity.attributes.companion_schema === 1))}
-          ${this.entityField('dailyGridToHome', 'Grid-to-home energy today', 'Automatically finds an Omnibattery daily grid-to-home counter when available. Other counters must be selected and exclude battery charging.')}
-          <label class="toggle"><input type="checkbox" .checked=${config.assume_no_grid_charging === true} @change=${(event: Event) => this.updateConfig('assume_no_grid_charging', (event.target as HTMLInputElement).checked)} /><span>Assume no grid charging</span></label>
-          <label class="toggle"><input type="checkbox" .checked=${config.assume_solar_only_export === true} @change=${(event: Event) => this.updateConfig('assume_solar_only_export', (event.target as HTMLInputElement).checked)} /><span>Assume solar-only export</span></label>` : nothing}
+        ${isSolar ? html`<p class="help">Uses the whole-home sources configured in your Energy dashboard and their recorded statistics. No helper sensors or charging assumptions are required.</p><a href="/config/energy/electricity">Energy settings</a>` : nothing}
         ${isPlan || isOperation ? html`
           ${this.entityField('import_price_entity', 'Import price entity', 'Optional Nord Pool sensor with timestamped raw_today / raw_tomorrow attributes.', true)}
           ${!isOperation ? this.entityField('export_price_entity', 'Export price entity', 'Optional explicit export tariff source in the same timestamped format.', true) : nothing}

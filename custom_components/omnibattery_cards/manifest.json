@@ -1,21 +1,19 @@
 {
   "domain": "omnibattery_cards",
   "name": "Omnibattery Cards",
-  "after_dependencies": [
-    "energy"
-  ],
   "codeowners": [
     "@thomasvt1"
   ],
   "config_flow": true,
   "dependencies": [
     "http",
-    "lovelace"
+    "lovelace",
+    "websocket_api"
   ],
   "documentation": "https://github.com/thomasvt1/omnibattery-cards",
   "integration_type": "service",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/thomasvt1/omnibattery-cards/issues",
   "requirements": [],
-  "version": "0.6.1"
+  "version": "0.7.0"
 }

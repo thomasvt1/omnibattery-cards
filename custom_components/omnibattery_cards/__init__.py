@@ -3,8 +3,9 @@ from datetime import timedelta
 import asyncio
 import json
 
-from homeassistant.const import Platform
 from homeassistant.core import callback
+from homeassistant.components import websocket_api
+from homeassistant.helpers import entity_registry as er, device_registry as dr
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers import config_validation as cv
@@ -12,12 +13,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 import logging
 
-from .const import DOMAIN, POWER_KEYS
-from .model import Recorder, flows, power
+from .const import DOMAIN, NAME, ENERGY_KEYS
+from .model import Recorder
 from .frontend import async_setup_frontend
 
 LOGGER = logging.getLogger(__name__)
-PLATFORMS = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -26,7 +26,21 @@ async def async_setup(hass, config):
     integration = await async_get_integration(hass, DOMAIN)
     await async_setup_frontend(hass, integration.version)
     hass.data[DOMAIN]["version"] = str(integration.version)
+    websocket_api.async_register_command(hass, recordings)
     return True
+
+
+@websocket_api.websocket_command({"type": "omnibattery_cards/recordings"})
+@callback
+def recordings(hass, connection, msg):
+    results = []
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        coordinator = getattr(entry, "runtime_data", None)
+        if coordinator and not coordinator.stopped:
+            results.append({"timeline": coordinator.settings["timeline"],
+                            "legacy_entity_ids": coordinator.legacy_entity_ids,
+                            "forecast": coordinator.recorder.data["forecast"]})
+    connection.send_result(msg["id"], results)
 
 
 class CompanionCoordinator(DataUpdateCoordinator):
@@ -35,20 +49,36 @@ class CompanionCoordinator(DataUpdateCoordinator):
         self.entry = entry
         self.settings = {**entry.data, **entry.options}
         self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}", atomic_writes=True)
-        self.signature = json.dumps(self.settings, sort_keys=True)
         self.recorder = None
         self.unsubscribers = []
-        self.last_save = None
+        self.legacy_entity_ids = []
         self.stopped = False
         self.record_lock = asyncio.Lock()
 
     async def async_start(self):
         stored = await self.store.async_load() or {}
-        self.recorder = Recorder(self.hass.config.time_zone, stored.get("recordings") if stored.get("sources") == self.signature else None)
+        # v1 keyed forecasts by every power setting. Keep its already-frozen
+        # baseline when the timeline matches, irrespective of retired settings.
+        try:
+            old_settings = json.loads(stored.get("sources", "{}"))
+        except (TypeError, ValueError):
+            old_settings = {}
+        matches = stored.get("timeline", old_settings.get("timeline")) == self.settings["timeline"]
+        self.recorder = Recorder(self.hass.config.time_zone, stored.get("recordings") if matches else None)
+        self.legacy_entity_ids = stored.get("legacy_entity_ids", [])
+        registry = er.async_get(self.hass)
+        owned = [entity for entity in er.async_entries_for_config_entry(registry, self.entry.entry_id)
+                 if entity.platform == DOMAIN and entity.unique_id in
+                 {f"{self.entry.entry_id}_{key}" for key in (*ENERGY_KEYS, "saved_forecast")}]
+        self.legacy_entity_ids = sorted(set(self.legacy_entity_ids + [e.entity_id for e in owned
+                                        if e.unique_id.endswith("_saved_forecast")]))
+        # Save migration data before removing entities, including renamed aliases.
         await self.async_refresh()
+        await self.store.async_save(self._stored())
+        for entity in owned:
+            registry.async_remove(entity.entity_id)
+            self.hass.states.async_remove(entity.entity_id)
         ids = [self.settings["timeline"]]
-        if self.settings.get("enable_independence"):
-            ids += [entity for key in POWER_KEYS for entity in self.settings.get(key, [])]
         self.unsubscribers = [
             async_track_state_change_event(self.hass, list(set(ids)), self._changed),
             async_track_time_interval(self.hass, self._tick, timedelta(seconds=10)),
@@ -56,29 +86,13 @@ class CompanionCoordinator(DataUpdateCoordinator):
 
     @callback
     def _changed(self, event):
-        # Capture unavailability immediately so a brief outage cannot be bridged.
-        old, new = event.data.get("old_state"), event.data.get("new_state")
-        unavailable = lambda state: state is None or state.state in ("unknown", "unavailable")
-        if not self.stopped and (unavailable(old) or unavailable(new)):
+        if not self.stopped:
             self.hass.async_create_task(self.async_refresh())
 
     @callback
     def _tick(self, now):
         if not self.stopped:
             self.hass.async_create_task(self.async_refresh())
-
-    def _sum_power(self, key):
-        ids = self.settings.get(key, [])
-        if not ids:
-            return None
-        values = []
-        for entity_id in ids:
-            state = self.hass.states.get(entity_id)
-            value = power({"state": state.state, "attributes": dict(state.attributes)}) if state else None
-            if value is None:
-                return None
-            values.append(value)
-        return sum(values)
 
     async def _async_update_data(self):
         async with self.record_lock:
@@ -91,26 +105,14 @@ class CompanionCoordinator(DataUpdateCoordinator):
         state = self.hass.states.get(self.settings["timeline"])
         attrs = dict(state.attributes) if state and state.state not in ("unknown", "unavailable") else {}
         captured = self.recorder.capture(attrs, now)
-        current = None
-        if self.settings.get("enable_independence"):
-            grid = self._sum_power("grid_power")
-            if grid is not None and self.settings.get("grid_inverted"):
-                grid = -grid
-            current = flows(grid, self._sum_power("solar_power"), self._sum_power("charge_power"), self._sum_power("discharge_power"))
-        self.recorder.sample(now, current)
-        # Persist newly frozen forecasts before publishing them. Write counters at
-        # most once a minute; Store flushes pending delayed writes on HA shutdown.
         if captured:
             await self.store.async_save(self._stored())
-            self.last_save = now
-        elif self.last_save is None or (now - self.last_save).total_seconds() >= 60:
-            self.store.async_delay_save(self._stored, 1)
-            self.last_save = now
         return self.recorder.data
 
     @callback
     def _stored(self):
-        return {"sources": self.signature, "recordings": self.recorder.data}
+        return {"timeline": self.settings["timeline"], "recordings": self.recorder.data,
+                "legacy_entity_ids": self.legacy_entity_ids}
 
     async def async_stop(self):
         self.stopped = True
@@ -128,7 +130,9 @@ async def async_setup_entry(hass, entry):
     await coordinator.async_start()
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(_reload))
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    dr.async_get(hass).async_get_or_create(config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)}, name=NAME, manufacturer=NAME,
+        model="Cards and recordings", sw_version=hass.data[DOMAIN]["version"])
     return True
 
 
@@ -137,9 +141,8 @@ async def _reload(hass, entry):
 
 
 async def async_unload_entry(hass, entry):
-    if unloaded := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_stop()
-    return unloaded
+    await entry.runtime_data.async_stop()
+    return True
 
 
 async def async_remove_entry(hass, entry):
@@ -147,3 +150,13 @@ async def async_remove_entry(hass, entry):
     if not any(other.entry_id != entry.entry_id for other in hass.config_entries.async_entries(DOMAIN)):
         if manager := hass.data.get(DOMAIN, {}).get("card_resources"):
             await manager.async_remove()
+
+
+async def async_migrate_entry(hass, entry):
+    if entry.version > 2:
+        return False
+    if entry.version == 1:
+        settings = {**entry.data, **entry.options}
+        hass.config_entries.async_update_entry(entry, version=2,
+            data={"timeline": settings["timeline"]}, options={})
+    return True

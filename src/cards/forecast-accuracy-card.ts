@@ -3,8 +3,13 @@ import { BaseCard } from '../base-card';
 import { forecastAccuracy, type AccuracyPoint } from '../data/insights';
 import { insightStyles } from './insight-styles';
 import { companionSetup } from '../companion';
+import { ReadingsCard, readCached } from '../readings-card';
+import { localDay } from '../data/energy-statistics';
+import type { HassEntity } from '../types';
 
-export class OmnibatteryForecastAccuracyCard extends BaseCard {
+interface Recording { timeline: string; legacy_entity_ids: string[]; forecast: Record<string, unknown>; }
+
+export class OmnibatteryForecastAccuracyCard extends ReadingsCard<Recording[]> {
   static styles = [BaseCard.styles, insightStyles, css`
     .legend { display:flex; justify-content:center; gap:22px; font-size:12px; margin-top:18px; }
     .legend span { display:flex; align-items:center; gap:7px; }
@@ -12,14 +17,28 @@ export class OmnibatteryForecastAccuracyCard extends BaseCard {
     svg.chart { height:160px; margin-top:6px; }
   `];
   static getStubConfig() { return { type: 'custom:omnibattery-forecast-accuracy-card' }; }
+  protected loadReadings() {
+    return readCached(this.hass, `recordings:${localDay(Date.now(), this.hass.config?.time_zone ?? 'UTC')}`, async () => {
+      if (!this.hass.callWS) throw new Error('Recording connection unavailable.');
+      return this.hass.callWS<Recording[]>({type: 'omnibattery_cards/recordings'});
+    });
+  }
   private time(stamp:number) { return new Intl.DateTimeFormat(this.hass.locale?.language || 'en',{timeZone:this.hass.config?.time_zone || 'UTC',hour:'2-digit',minute:'2-digit'}).format(stamp); }
   protected renderContent() {
     const metric = this.config.forecast_metric ?? 'solar';
     const sources = this.snapshot.insightSources;
-    const result = forecastAccuracy(sources.savedForecast,this.snapshot.timeline,metric,Date.now());
-    if (sources.savedForecastError) result.error = sources.savedForecastError;
-    else if (!sources.savedForecast && !this.config.saved_forecast_entity) result.error = 'No saved forecast snapshot found. A live forecast cannot measure past forecast accuracy.';
-    if (sources.savedForecast?.attributes.companion_schema === 1 && ['Select an available saved forecast entity.', 'No complete matching intervals yet.'].includes(result.error ?? '') && !sources.savedForecastError)
+    const explicit = this.config.saved_forecast_entity;
+    const matches = (this.readings ?? []).filter(r => explicit
+      ? r.legacy_entity_ids.includes(explicit) : r.timeline === this.snapshot.timeline.entityId);
+    const internal = matches.length === 1 ? matches[0] : undefined;
+    const entity: HassEntity | undefined = internal ? {entity_id: '', state: 'recorded', attributes: internal.forecast} : sources.savedForecast;
+    const result = forecastAccuracy(entity, this.snapshot.timeline, metric, Date.now());
+    if (!internal && sources.savedForecastError) result.error = sources.savedForecastError;
+    else if (!entity && explicit) result.error = 'Select an available saved forecast entity.';
+    else if (!entity) result.error = this.readingsError
+      ? 'Set up Omnibattery Cards recordings to save future forecasts internally.'
+      : 'No internal forecast recording found for this timeline. Configure recordings for this installation.';
+    if (internal && (!internal.forecast.saved_at || result.error === 'No complete matching intervals yet.'))
       result.error = 'Recording forecasts. The first comparison appears after a saved interval has been fully measured.';
     const points = result.points;
     const delta = result.measured-result.forecast;
@@ -42,7 +61,7 @@ export class OmnibatteryForecastAccuracyCard extends BaseCard {
         ${[0,1,2,3,4].map(i=>svg`<text x=${32+i*88.5} y="145" text-anchor="middle">${this.time(start+(end-start)*i/4)}</text>`)}
       </svg><div class="stats"><div>Measured<strong>${this.format(result.measured,'kWh')}</strong></div><div>Forecast<strong>${this.format(result.forecast,'kWh')}</strong></div>`}
       <div class="footnote">${result.savedAt===undefined?'Requires a forecast snapshot saved before measurement.':`Forecast saved at ${this.time(result.savedAt)} · ${points.length} matched intervals`}</div>
-      ${result.error ? companionSetup(sources.companionInstalled) : ''}
+      ${result.error ? companionSetup(Boolean(this.readings?.length) || sources.companionInstalled) : ''}
     </ha-card>`;
   }
 }

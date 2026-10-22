@@ -1,6 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
-from custom_components.omnibattery_cards.model import Recorder, energy_defaults, flows, power
+from custom_components.omnibattery_cards.model import Recorder
 
 UTC = timezone.utc
 
@@ -50,56 +50,3 @@ def test_dst_skips_repeated_cells_and_handles_short_days():
         recorder = Recorder("Europe/Amsterdam")
         assert recorder.capture(source, now)
         assert len(recorder.data["forecast"]["intervals"]) == expected
-
-
-def test_flow_model_handles_grid_charging_and_battery_export():
-    # All grid charging at night: 2 kW of 3 kW grid goes to the battery.
-    assert flows(3000, 0, 2000, 0)["grid_to_home"] == 1000
-    # Solar supplies home then battery: grid funds the remaining battery charge.
-    assert flows(1000, 2000, 2000, 0)["grid_to_home"] == 0
-    # Battery export is not falsely labelled solar export.
-    assert flows(-1000, 0, 0, 2000)["solar_to_grid"] == 0
-    assert flows(-1000, 3000, 1000, 0)["solar_to_grid"] == 1000
-    assert flows(None, 1, 2, 3) is None
-    assert flows(0, 0, 3000, 0) is None
-    assert power({"state": "unavailable", "attributes": {"unit_of_measurement": "W"}}) is None
-    assert power({"state": "1.2", "attributes": {"unit_of_measurement": "kW"}}) == 1200
-
-
-def test_counters_have_same_period_and_do_not_bridge_missing_or_restart():
-    now = datetime(2026, 10, 22, 12, tzinfo=UTC)
-    recorder = Recorder("UTC")
-    flow = flows(3000, 0, 2000, 0)
-    recorder.sample(now, flow)
-    recorder.sample(now+timedelta(seconds=60), None)
-    recorder.sample(now+timedelta(seconds=120), flow)
-    daily = recorder.data["daily"]
-    assert daily["coverage_seconds"] == 60
-    assert daily["gap_seconds"] == 60
-    assert abs(daily["home"] - 1/60) < 1e-9
-    assert daily["home"] == daily["grid_to_home"]
-    restored = Recorder("UTC", recorder.data)
-    restored.sample(now+timedelta(seconds=180), flow)
-    assert restored.data["daily"]["coverage_seconds"] == 60
-    assert restored.data["daily"]["gap_seconds"] == 120
-
-
-def test_midnight_splits_physical_time_and_resets_totals():
-    now = datetime(2026, 10, 22, 23, 59, 30, tzinfo=UTC)
-    recorder = Recorder("UTC")
-    flow = flows(1000, 0, 0, 0)
-    recorder.sample(now, flow)
-    daily = recorder.sample(now+timedelta(seconds=60), flow)
-    assert daily["local_date"] == "2026-10-23"
-    assert daily["coverage_seconds"] == 30
-    assert abs(daily["home"] - 1/120) < 1e-9
-
-
-def test_energy_dashboard_multiple_tariffs_do_not_duplicate_grid_power():
-    result = energy_defaults([
-        {"type": "grid", "stat_rate": "sensor.p1"}, {"type": "grid", "stat_rate": "sensor.p1"},
-        {"type": "solar", "stat_rate": "sensor.roof"}, {"type": "solar", "stat_rate": "sensor.shed"},
-        {"type": "battery", "stat_rate": "sensor.net_battery", "power_config": {"stat_rate_from": "sensor.discharge", "stat_rate_to": "sensor.charge"}},
-    ])
-    assert result == {"grid_power": ["sensor.p1"], "solar_power": ["sensor.roof", "sensor.shed"],
-                      "charge_power": ["sensor.charge"], "discharge_power": ["sensor.discharge"]}

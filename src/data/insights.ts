@@ -7,24 +7,6 @@ export function retainedShare(total: number | null, outgoing: number | null): nu
     ? 100 * (total - outgoing) / total : null;
 }
 
-/** Companion counters share one observed period; never divide by upstream full-day totals. */
-export function companionDaily(entity: HassEntity | undefined, now: number, zone = 'UTC') {
-  if (!available(entity) || entity.attributes.companion_schema !== 1 || entity.attributes.companion_kind !== 'grid_to_home') return undefined;
-  const a = entity.attributes;
-  const start = Date.parse(text(a.period_start) ?? ''), updated = Date.parse(text(a.updated_at) ?? '');
-  const coverage = number(a.coverage_seconds), gaps = number(a.gap_seconds);
-  const home = number(a.home_kwh), solar = number(a.solar_kwh), gridImport = number(a.grid_import_kwh),
-    gridExport = number(a.grid_export_kwh), gridToHome = number(a.grid_to_home_kwh), solarToGrid = number(a.solar_to_grid_kwh);
-  if (![start, updated].every(Number.isFinite) || start > updated || updated > now || now - updated > 120_000 ||
-    coverage === null || coverage <= 0 || gaps === null || gaps < 0 ||
-    home === null || solar === null || gridImport === null || gridExport === null || gridToHome === null || solarToGrid === null ||
-    Math.min(home, solar, gridImport, gridExport, gridToHome, solarToGrid) < 0 || gridToHome > Math.min(home, gridImport) || solarToGrid > Math.min(solar, gridExport)) return undefined;
-  try {
-    const day = (stamp: number) => new Intl.DateTimeFormat('en-CA', {timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit'}).format(stamp);
-    if (day(start) !== day(now) || day(updated) !== day(now)) return undefined;
-  } catch { return undefined; }
-  return {home, solar, gridImport, gridExport, gridToHome, solarToGrid, start, coverage, gaps};
-}
 export interface PriceWindow { start: number; end: number; value: number; }
 /** Exact duration-weighted extrema, including optima ending on tariff boundaries. */
 export function priceWindows(series: PriceSeries | undefined, now: number, duration = 7_200_000) {

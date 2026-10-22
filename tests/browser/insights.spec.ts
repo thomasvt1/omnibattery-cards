@@ -1,47 +1,51 @@
 import { expect, test } from '@playwright/test';
 import type { HomeAssistant } from '../../src/types';
 const names=['solar-independence','price-windows','forecast-accuracy'];
-test('missing insight data offers companion installation and setup', async ({page}) => {
+test('Solar Independence uses Energy statistics without helper entities', async ({page}) => {
+  await page.clock.install({time: new Date('2026-06-15T14:00:00Z')});
   await page.goto('/');
-  await page.evaluate(() => {
-    window.demo.setConfig('solar-independence', {entities:{}, assume_no_grid_charging:false, assume_solar_only_export:false});
-    window.demo.setConfig('forecast-accuracy', {saved_forecast_entity:'sensor.absent'});
-  });
-  for (const name of ['solar-independence','forecast-accuracy']) {
-    const card = page.locator(`omnibattery-${name}-card`);
-    await expect(card.getByRole('link', {name:'Install Omnibattery Cards integration'})).toHaveAttribute('href', /repository=omnibattery-cards&category=integration/);
-    await expect(card.getByRole('link', {name:'Set up after installation'})).toHaveAttribute('href', /domain=omnibattery_cards/);
-  }
-});
-
-test('companion counters calculate percentages over the recorded period and disclose the allocation model', async ({page}) => {
-  await page.clock.setFixedTime(new Date('2026-06-15T14:00:00Z'));
-  await page.goto('/');
-  await page.evaluate(() => window.demo.setConfig('solar-independence', {entities:{}, assume_no_grid_charging:false, assume_solar_only_export:false}));
   const card = page.locator('omnibattery-solar-independence-card');
-  await card.evaluate(el => {
-    const card = el as HTMLElement & {hass:HomeAssistant; setConfig: (config: {type:string}) => void};
-    const entity_id = 'sensor.renamed_companion_grid_home';
-    card.hass = {...card.hass, states: {...card.hass.states, [entity_id]: {entity_id, state:'1', attributes: {
-      companion_schema:1, companion_kind:'grid_to_home', source_timeline:'sensor.demo_timeline', estimated:true,
-      period_start:'2026-06-15T12:00:00Z', updated_at:'2026-06-15T14:00:00Z', coverage_seconds:7100, gap_seconds:100,
-      home_kwh:4, solar_kwh:2, grid_import_kwh:3, grid_export_kwh:1, grid_to_home_kwh:1, solar_to_grid_kwh:0.5,
-    }}}};
-    card.setConfig({type:'custom:omnibattery-solar-independence-card'});
-  });
-  await expect(card.locator('.hero')).toHaveText('75 %');
+  await expect(card.locator('.hero')).toHaveText('67 %');
   await expect(card.locator('.caption')).toHaveText('Calculated self-sufficiency');
-  await expect(card.locator('.footnote').filter({hasText:'Solar-first allocation estimate'})).toBeVisible();
-  await expect(card.locator('.totals')).toContainText('4 kWh');
-  await expect(card.getByRole('link', {name:'Install Omnibattery Cards integration'})).toHaveCount(0);
+  await expect(card.locator('.totals')).toContainText('12 kWh');
+  await expect(card.getByRole('status')).toContainText('Energy dashboard statistics');
   await card.evaluate(el => {
-    const c = el as HTMLElement & {hass:HomeAssistant};
-    const old = c.hass.states['sensor.renamed_companion_grid_home'];
-    c.hass = {...c.hass, states:{...c.hass.states,[old.entity_id]:{...old,state:'unavailable'}}};
+    const c = el as HTMLElement & {hass: HomeAssistant};
+    const original = c.hass.callWS!;
+    c.hass = {...c.hass, connection: undefined, callWS: async <T,>(message: Record<string, unknown>): Promise<T> => {
+      if (message.type === 'recorder/statistics_during_period') throw new Error('Statistics temporarily unavailable');
+      return original<T>(message);
+    }};
   });
   await expect(card.locator('.hero')).toHaveText('—');
-  await expect(card.getByRole('link', {name:'Configure recordings'})).toBeVisible();
+  await expect(card.getByRole('status')).toContainText('Statistics temporarily unavailable');
+  await expect(card.getByRole('link', {name: 'Energy settings'})).toBeVisible();
+  await page.evaluate(() => window.demo.setScenario('solar'));
+  await expect(card.locator('.hero')).toHaveText('67 %');
 });
+
+test('forecast uses internal storage and recognizes an old renamed entity override', async ({page}) => {
+  await page.clock.install({time: new Date('2026-06-15T14:00:00Z')});
+  await page.goto('/');
+  const card = page.locator('omnibattery-forecast-accuracy-card');
+  await card.evaluate(el => {
+    const c = el as HTMLElement & {hass: HomeAssistant; setConfig: (config: object) => void};
+    const original = c.hass.callWS!;
+    const states = {...c.hass.states}; delete states['sensor.demo_saved_forecast'];
+    c.hass = {...c.hass, states, connection: undefined, callWS: async <T,>(message: Record<string, unknown>): Promise<T> => {
+      if (message.type === 'omnibattery_cards/recordings') {
+        const results = await original<{legacy_entity_ids: string[]}[]>(message);
+        results[0].legacy_entity_ids = ['sensor.renamed_old_forecast'];
+        return results as T;
+      }
+      return original<T>(message);
+    }};
+    c.setConfig({type: 'custom:omnibattery-forecast-accuracy-card', saved_forecast_entity: 'sensor.renamed_old_forecast'});
+  });
+  await expect(card.locator('.stats')).toBeVisible();
+  await expect(card.locator('.hero')).not.toHaveText('—');
+});
+
 test('insight cards discover sources without manual overrides and explain ambiguous tariffs', async ({page}) => {
   await page.clock.install({time: new Date('2026-06-15T14:00:00Z')});
   await page.goto('/');
@@ -71,25 +75,6 @@ test('insight cards discover sources without manual overrides and explain ambigu
   await expect(price.locator('.empty')).toContainText('Multiple timestamped price sources');
 });
 
-test('solar independence uses a renamed discovered grid-to-home counter without the assumption', async ({page}) => {
-  await page.goto('/');
-  await page.evaluate(() => window.demo.setConfig('solar-independence', {entities: {}, assume_no_grid_charging: false}));
-  const solar = page.locator('omnibattery-solar-independence-card');
-  await solar.evaluate(el => {
-    const card = el as HTMLElement & {hass: HomeAssistant};
-    const original = card.hass.callWS!;
-    card.hass = {...card.hass, connection: undefined, callWS: async <T,>(message: Record<string, unknown>): Promise<T> => {
-      const result = await original<T>(message);
-      if (message.type === 'config/entity_registry/list') return [...result as unknown as object[], {
-        entity_id: 'sensor.demo_grid_to_home', platform: 'omnibattery', config_entry_id: 'demo-omnibattery',
-        translation_key: 'daily_grid_to_home_energy',
-      }] as T;
-      return result;
-    }};
-  });
-  await expect(solar.locator('.hero')).not.toHaveText('—');
-  await expect(solar.locator('.caption')).toHaveText('Self-sufficiency');
-});
 
 for(const width of [320,390,820,1440]) for(const theme of ['light','dark'] as const) {
   test(`new cards fit ${width}px ${theme}`,async({page})=>{
@@ -123,23 +108,25 @@ test('insight editors update data sources and unavailable values stay honest',as
   await editor.getByLabel('Saved forecast entity',{exact:true}).press('Tab');
   await expect(page.locator('omnibattery-forecast-accuracy-card').getByRole('status')).toContainText('Select an available saved forecast');
   await page.evaluate(()=>window.demo.setConfig('solar-independence',{entities:{},assume_no_grid_charging:false}));
-  await expect(page.locator('omnibattery-solar-independence-card .hero')).toHaveText('—');
+  await expect(page.locator('omnibattery-solar-independence-card .hero')).toHaveText('67 %');
   await page.evaluate(()=>window.demo.showEditor('solar-independence'));
-  await editor.getByLabel('Assume no grid charging',{exact:true}).check();
+  await expect(editor.getByRole('link', {name: 'Energy settings'})).toBeVisible();
+  await expect(editor.getByLabel('Assume no grid charging',{exact:true})).toHaveCount(0);
   await expect(page.locator('omnibattery-solar-independence-card .hero')).not.toHaveText('—');
   await page.evaluate(()=>window.demo.showEditor('price-windows'));
   await editor.getByLabel('Import price entity',{exact:true}).fill('sensor.absent');
   await editor.getByLabel('Import price entity',{exact:true}).press('Tab');
   await expect(page.locator('omnibattery-price-windows-card .hero')).toHaveText('—');
 });
-test('saved forecast updates invalidate the card and missing installations do not invent results',async({page})=>{
+test('external saved forecast updates invalidate the card and missing installations do not invent results',async({page})=>{
   await page.clock.setFixedTime(new Date('2026-06-15T14:00:00Z'));
   await page.goto('/');
   const card=page.locator('omnibattery-forecast-accuracy-card');
   await expect(card.locator('.stats')).toBeVisible();
+  await page.evaluate(() => window.demo.setConfig('forecast-accuracy', {saved_forecast_entity: 'sensor.external_forecast'}));
   await card.evaluate(el=>{
     const c=el as HTMLElement & {hass:HomeAssistant};const old=c.hass.states['sensor.demo_saved_forecast'];
-    c.hass={...c.hass,states:{...c.hass.states,[old.entity_id]:{...old,state:'unavailable'}}};
+    c.hass={...c.hass,states:{...c.hass.states,['sensor.external_forecast']:{...old,entity_id:'sensor.external_forecast',state:'unavailable'}}};
   });
   await expect(card.getByRole('status')).toContainText('Select an available');
   await page.evaluate(()=>window.demo.setScenario('missing'));

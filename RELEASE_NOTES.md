@@ -1,9 +1,9 @@
-## Fix integration dashboard visibility
+# v0.7.0 — Energy statistics without helper sensors
 
-Omnibattery Cards was incorrectly classified as a helper in v0.6.0. It could be loaded and show its device while remaining absent from Settings → Devices & services → Integrations.
+Solar Independence now uses your existing Energy dashboard sources and hourly recorder statistics. No additional daily energy helpers or power sampling are required. Both solar meters, multiple grid tariffs, and battery charge/discharge are included automatically.
 
-This release classifies it as a service. Update in HACS and restart Home Assistant so its manifest is reloaded, then refresh the browser. **Do not remove or recreate the integration.** Existing devices, entity IDs, settings, and recordings are preserved.
+Forecast snapshots are kept internally across restarts, without a saved-forecast sensor. Existing recordings and card references to renamed snapshot helpers migrate automatically. The seven integration-owned helper types are removed; other sensors and recorder history remain untouched. Existing dashboard resource deduplication remains in place.
 
-The frontend console banner now reads its version from the integration manifest during the build.
+**Upgrade:** update in HACS, restart Home Assistant, then refresh the browser. Do not remove/recreate the integration. No charging assumption checkboxes are needed. Solar Independence now represents the whole-home Energy configuration; old counter overrides are ignored. Flow attribution remains an explicitly labelled calculation, and statistics can lag live readings.
 
-Verified with a failing-then-passing test through Home Assistant’s actual WebSocket integration-type filter. Users upgrading from the older standalone Dashboard releases should follow the existing README migration instructions.
+If you used the removed helpers in unrelated automations/cards, update those references. Downgrading to 0.6.x requires a pre-upgrade backup because this release migrates entries to version 2.

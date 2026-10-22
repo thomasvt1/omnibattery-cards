@@ -15,8 +15,6 @@ for(const type of types) {
   const card=document.createElement(type.slice(7)) as DemoCard;
   card.id=type.slice(7);
   const config:CardConfig={type,...((type.includes('daily-operation') || type.includes('plan') || type.includes('price-windows'))?{import_price_entity:'sensor.demo_import_price'}:{})};
-  if(type.includes('solar-independence')) Object.assign(config,{assume_solar_only_export:true,entities:{dailyGridToHome:'sensor.demo_grid_to_home'}});
-  if(type.includes('forecast-accuracy')) config.saved_forecast_entity='sensor.demo_saved_forecast';
   configs.set(type,config); card.setConfig(config); card.hass=demo.hass; cardElements.set(type,card); grid.append(card);
 }
 function setScenario(scenario:Parameters<typeof createDemo>[0]) {

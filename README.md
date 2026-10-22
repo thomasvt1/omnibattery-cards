@@ -63,11 +63,11 @@ Cards follow the active Home Assistant theme. They can open entity details, but 
 
 ## Install with HACS
 
-Version 0.6.0 combines the cards and their recording sensors in **one HACS Integration**. It remains independent of upstream Omnibattery.
+The unified package combines the cards and internal forecast recordings in **one HACS Integration**. It remains independent of upstream Omnibattery.
 
 1. Open the **Add to HACS** link above, or add `https://github.com/thomasvt1/omnibattery-cards` as a custom repository with type **Integration**.
 2. Download **Omnibattery Cards**, then restart Home Assistant.
-3. Add **Omnibattery Cards** in **Settings → Devices & services → Add integration** ([open setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=omnibattery_cards)). Confirm the timeline; calculated Solar Independence is optional.
+3. Add **Omnibattery Cards** in **Settings → Devices & services → Add integration** ([open setup](https://my.home-assistant.io/redirect/config_flow_start/?domain=omnibattery_cards)). Confirm the timeline for forecast snapshots. Solar Independence automatically reads your Energy dashboard statistics.
 4. Reload the browser. The integration registers the bundled cards automatically. Add them through **Edit dashboard → Add card → Omnibattery**.
 
 This is a custom repository, not yet included in HACS's default catalogue.
@@ -80,7 +80,7 @@ HACS cannot install one repository under two categories. This category change ne
 
 1. Keep your dashboard configurations. In HACS, remove the old **Omnibattery Cards Dashboard download**, then remove its custom-repository entry if it remains. Do not delete your dashboard cards.
 2. Add the same repository as an **Integration**, download it, restart Home Assistant, and complete integration setup as above.
-3. Setup replaces recognized old HACS/manual resource URLs with `/omnibattery_cards/omnibattery-cards.js?v=0.6.1`, preserving one resource ID and removing duplicate entries. Query strings such as `hacstag` are ignored when identifying old URLs. Other cards and dashboard configurations are untouched.
+3. Setup replaces recognized old HACS/manual resource URLs with `/omnibattery_cards/omnibattery-cards.js?v=0.7.0`, preserving one resource ID and removing duplicate entries. Query strings such as `hacstag` are ignored when identifying old URLs. Other cards and dashboard configurations are untouched.
 4. Reload every open Home Assistant browser tab. Existing `custom:omnibattery-*` card types and settings continue to work.
 
 Recognized old paths are `/hacsfiles/omnibattery-cards/omnibattery-cards.js`, `/local/community/omnibattery-cards/omnibattery-cards.js`, `/local/omnibattery-cards/omnibattery-cards.js`, and `/local/omnibattery-cards.js`. If you used a renamed file, an absolute URL, or another path, remove that resource yourself before setup; it cannot safely be identified automatically. The integration saves the original recognized resource entries in its own migration backup before changing them, and uses Home Assistant's resource collection API.
@@ -89,7 +89,7 @@ For **YAML-managed resources**, Home Assistant will show a repair instruction in
 
 ```yaml
 resources:
-  - url: /omnibattery_cards/omnibattery-cards.js?v=0.6.1
+  - url: /omnibattery_cards/omnibattery-cards.js?v=0.7.0
     type: module
 ```
 
@@ -215,20 +215,15 @@ Missing, stale, previous-day, or incomplete forecast data stays unavailable. A k
 
 ### Solar independence
 
-For automatic recording, [set up the bundled recording integration](https://my.home-assistant.io/redirect/config_flow_start/?domain=omnibattery_cards) under Settings → Devices & services. It suggests the Energy dashboard's grid, solar, and battery power meters. Explicitly enable calculated Solar Independence during setup. The card discovers its sensors, labels the percentages as calculated, and uses counters from the same observed period. Solar-first attribution is an estimate, not measured energy provenance. Missing readings and restart gaps are excluded and disclosed; recording starts after setup. Manual measured counters remain supported below.
+The card reads the sources configured under **Settings → Dashboards → Energy** and requests their existing hourly recorder statistics in kWh. It includes all configured solar meters, grid tariffs, and battery charge/discharge channels. It uses the whole-home Energy configuration, independent of the selected Omnibattery installation. No helper entities or power sampling are required.
 
 ```yaml
 type: custom:omnibattery-solar-independence-card
-entities:
-  dailyGridToHome: sensor.grid_to_home_energy_today
-assume_solar_only_export: true
 ```
 
-Self-sufficiency is `(home energy − grid-to-home energy) / home energy`. Supply a daily `dailyGridToHome` counter in Wh/kWh that excludes battery charging. If the installation never charges batteries from the grid, `assume_no_grid_charging: true` explicitly permits using daily grid import instead. Both assumptions default to false; unavailable or inconsistent counters show an em dash. All daily counters must cover the same period and reset together. This metric describes direct grid reliance today, not the historical origin of stored battery energy.
+Home energy is import + solar + battery discharge − export − battery charge. Source-to-destination allocation follows Home Assistant Energy's calculation for each hourly interval. Calculated self-sufficiency is the share of home energy supplied by solar and battery rather than direct grid import. Battery discharge may include energy previously charged from the grid; this is not a measured renewable-energy percentage. Calculated solar retention excludes allocated solar export and includes solar stored in the battery.
 
-The card automatically discovers an Omnibattery counter with the registry key `daily_grid_to_home_energy` or `system_daily_grid_to_home_energy`, including renamed entities. If the integration does not supply this counter, select an external counter explicitly. Neither a currently disabled grid-charging switch nor total daily battery charging proves how much grid energy went to the home today.
-
-Solar retention is `(solar generation − grid export) / solar generation` and requires `assume_solar_only_export: true`. Leave it disabled when exported energy can come from grid-charged batteries. Retained energy includes battery storage and losses, not just household consumption.
+The card shows the latest statistics period, retries unavailable data automatically, and excludes incomplete intervals rather than treating missing sensors as zero. Results can lag live sensor states, just like the Energy dashboard. Old `dailyGridToHome`, `assume_no_grid_charging`, and `assume_solar_only_export` settings are obsolete and ignored by this card.
 
 ### Price windows
 
@@ -243,19 +238,18 @@ Without an override, price sources are discovered from `raw_today` / `raw_tomorr
 
 ### Forecast accuracy
 
-The [bundled recording integration](docs/recordings.md) saves future quarter-hour forecasts before measurement and retains them across restarts. The card discovers the matching snapshot automatically. After installation and setup, allow a complete saved interval to finish (up to 30 minutes); past forecasts cannot be reconstructed. Both this card and its editor offer install/setup links when support is missing.
+The [bundled recording integration](docs/recordings.md) saves future quarter-hour forecasts before measurement and retains them across restarts. Snapshots are stored internally, with no entity exposed. The card reads the recording matching its selected timeline automatically. After installation and setup, allow a complete saved interval to finish (up to 30 minutes); past forecasts cannot be reconstructed. Both this card and its editor offer install/setup links when support is missing.
 
 ```yaml
 type: custom:omnibattery-forecast-accuracy-card
-saved_forecast_entity: sensor.saved_energy_forecast
 forecast_metric: solar # solar (default) or home
 ```
 
-Omnibattery's current timeline does not retain the earlier forecast needed for this comparison. Provide a separately persisted sensor with a frozen snapshot; the card does not create helpers, capture snapshots, or make service calls. The visual editor exposes this input. Without it, the card explains what is missing.
+Omnibattery's current timeline does not retain the earlier forecast needed for comparison. The bundled integration freezes future intervals before measurement and serves them through a read-only WebSocket endpoint. Existing saved forecasts survive the upgrade. It never reconstructs past forecasts from revised values.
 
-A unique compatible saved snapshot is discovered automatically from its schema, `saved_at`, and interval attributes for the selected metric. Multiple matching snapshots require an explicit selection. Live forecasts and consumption profiles are not substituted for saved snapshots. Explicit source selections always take precedence, including when the selected entity is missing or unavailable.
+An optional `saved_forecast_entity` override remains available for externally managed frozen snapshots. An override referencing a retired integration-owned snapshot entity is redirected to internal storage, including renamed entities. Other explicit overrides are never silently replaced by a different source.
 
-The sensor must have an available state and these attributes (example timestamps must be replaced with the actual forecast day):
+An optional external sensor must have an available state and these attributes (example timestamps must be replaced with the actual forecast day):
 
 ```yaml
 schema_version: 1
