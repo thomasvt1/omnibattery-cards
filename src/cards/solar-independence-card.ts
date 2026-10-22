@@ -20,8 +20,9 @@ export class OmnibatterySolarIndependenceCard extends BaseCard {
   static getStubConfig() { return { type: 'custom:omnibattery-solar-independence-card' }; }
   protected renderContent() {
     const d = this.snapshot.daily;
-    const source = this.config.entities?.dailyGridToHome;
-    const gridHome = source ? metric(this.hass.states[source], 'energy').value : this.config.assume_no_grid_charging ? d.gridImport.value : null;
+    const sources = this.snapshot.insightSources;
+    const source = this.config.entities?.dailyGridToHome || sources.gridToHome?.entity_id;
+    const gridHome = source ? metric(sources.gridToHome, 'energy').value : this.config.assume_no_grid_charging ? d.gridImport.value : null;
     const share = retainedShare(d.home.value, gridHome);
     const solarShare = this.config.assume_solar_only_export ? retainedShare(d.solar.value, d.gridExport.value) : null;
     return html`<ha-card>${this.renderHeader('Solar independence', 'Today')}
@@ -34,7 +35,7 @@ export class OmnibatterySolarIndependenceCard extends BaseCard {
       <div class="row"><span class="amber">${icon('sun')}</span><span>Solar generated</span><strong>${this.format(d.solar.value, 'kWh')}</strong></div>
       <div class="row"><span style="color:var(--ob-grid)">${icon('grid')}</span><span>Grid export</span><strong>${this.format(d.gridExport.value, 'kWh')}</strong></div>
       <div class="row"><span class="amber">${icon('chart')}</span><span>Solar retained on site${this.config.assume_solar_only_export ? '*' : ''}</span><strong>${this.format(solarShare, '%', 0)}</strong></div>
-      <div class="footnote">${!source && !this.config.assume_no_grid_charging ? 'Select grid-to-home daily energy or confirm no grid charging in the editor.' : !source ? '*Assumes no grid charging. ' : ''}${this.config.assume_solar_only_export ? '*Assumes solar-only export.' : ' Solar retention requires solar-only export.'}</div>
+      <div class="footnote">${!source && !this.config.assume_no_grid_charging ? sources.gridToHomeError ?? 'No daily grid-to-home counter found. Total grid import can include battery charging. Select a counter or confirm no grid charging in the editor.' : !source ? '*Assumes no grid charging. ' : ''}${this.config.assume_solar_only_export ? '*Assumes solar-only export.' : ' Solar retention requires solar-only export.'}</div>
     </ha-card>`;
   }
 }

@@ -4,6 +4,7 @@ import { available, metric, sumMetrics, text } from './values';
 import { parseTimeline } from './timeline';
 import { parsePrices } from './prices';
 import { buildStatus } from './status';
+import { discoverInsightSources } from './insight-discovery';
 
 export { discover, isOmnibattery, isSystem, matchesKey } from './discovery';
 export { metric } from './values';
@@ -13,6 +14,7 @@ export { parsePrices } from './prices';
 /** Stable read-only view model. Live W, kWh, Celsius; battery positive = into battery. */
 export function buildSnapshot(hass: HomeAssistant, registry: RegistryData, config: CardConfig, now = new Date()): Snapshot {
   const discovery = discover(hass, registry, config);
+  const insightSources = discoverInsightSources(hass, registry, config, discovery);
   const batteries: BatteryModel[] = discovery.batteryIds.map(id => {
     const device = registry.devices.find(item => item.id === id);
     const get = (role: string) => discovery.get(role, id);
@@ -48,6 +50,7 @@ export function buildSnapshot(hass: HomeAssistant, registry: RegistryData, confi
     { value: charge.value - discharge.value, entityId: charge.value > 0 ? charge.entityId : discharge.entityId } : sumMetrics(batteries.map(battery => battery.acPower));
   const timeline = parseTimeline(discovery.get('timeline'), now, hass.config?.time_zone);
   const snapshot: Snapshot = {
+    insightSources,
     error: discovery.error, integrationId: discovery.integrationId, warnings: [...timeline.warnings],
     grid: metric(discovery.get('grid'), 'power', (config.grid_inverted ?? discovery.panel.grid_inverted === true) ? -1 : 1),
     solar: system('solar', 'power'), home: system('home', 'power'),
@@ -56,7 +59,7 @@ export function buildSnapshot(hass: HomeAssistant, registry: RegistryData, confi
     daily: { solar: system('dailySolar', 'energy'), home: system('dailyHome', 'energy'), gridImport: system('dailyGridImport', 'energy'),
       gridExport: system('dailyGridExport', 'energy'), charge: aggregate('dailyCharge', 'dailyCharge', 'energy'), discharge: aggregate('dailyDischarge', 'dailyDischarge', 'energy') },
     batteries, status: buildStatus(discovery, batteries, timeline), timeline,
-    importPrices: parsePrices(config.import_price_entity ? hass.states[config.import_price_entity] : undefined, hass.config?.currency),
+    importPrices: parsePrices(insightSources.importPrice, hass.config?.currency),
     exportPrices: parsePrices(config.export_price_entity ? hass.states[config.export_price_entity] : undefined, hass.config?.currency),
   };
   if (!discovery.entities.length && !discovery.error && !Object.keys(config.entities ?? {}).length)

@@ -1,6 +1,55 @@
 import { expect, test } from '@playwright/test';
 import type { HomeAssistant } from '../../src/types';
 const names=['solar-independence','price-windows','forecast-accuracy'];
+test('insight cards discover sources without manual overrides and explain ambiguous tariffs', async ({page}) => {
+  await page.clock.install({time: new Date('2026-06-15T14:00:00Z')});
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.demo.setConfig('price-windows', {import_price_entity: undefined});
+    window.demo.setConfig('forecast-accuracy', {saved_forecast_entity: undefined});
+  });
+  const price = page.locator('omnibattery-price-windows-card');
+  const forecast = page.locator('omnibattery-forecast-accuracy-card');
+  await expect(price.locator('.chart')).toBeVisible();
+  await expect(forecast.locator('.stats')).toBeVisible();
+  for (const state of ['unavailable', '0.19']) {
+    await price.evaluate((el, state) => {
+      const card = el as HTMLElement & {hass: HomeAssistant};
+      const original = card.hass.states['sensor.demo_import_price'];
+      card.hass = {...card.hass, states: {...card.hass.states, [original.entity_id]: {...original, state}}};
+    }, state);
+    await expect(price.locator('.chart')).toHaveCount(state === 'unavailable' ? 0 : 1);
+  }
+  await price.evaluate(el => {
+    const card = el as HTMLElement & {hass: HomeAssistant};
+    const original = card.hass.states['sensor.demo_import_price'];
+    card.hass = {...card.hass, states: {...card.hass.states, 'sensor.second_price': {...original, entity_id: 'sensor.second_price'}}};
+  });
+  // The periodic refresh also discovers newly added external sources.
+  await page.clock.fastForward(60000);
+  await expect(price.locator('.empty')).toContainText('Multiple timestamped price sources');
+});
+
+test('solar independence uses a renamed discovered grid-to-home counter without the assumption', async ({page}) => {
+  await page.goto('/');
+  await page.evaluate(() => window.demo.setConfig('solar-independence', {entities: {}, assume_no_grid_charging: false}));
+  const solar = page.locator('omnibattery-solar-independence-card');
+  await solar.evaluate(el => {
+    const card = el as HTMLElement & {hass: HomeAssistant};
+    const original = card.hass.callWS!;
+    card.hass = {...card.hass, connection: undefined, callWS: async <T,>(message: Record<string, unknown>): Promise<T> => {
+      const result = await original<T>(message);
+      if (message.type === 'config/entity_registry/list') return [...result as unknown as object[], {
+        entity_id: 'sensor.demo_grid_to_home', platform: 'omnibattery', config_entry_id: 'demo-omnibattery',
+        translation_key: 'daily_grid_to_home_energy',
+      }] as T;
+      return result;
+    }};
+  });
+  await expect(solar.locator('.hero')).not.toHaveText('—');
+  await expect(solar.locator('.caption')).toHaveText('Self-sufficiency');
+});
+
 for(const width of [320,390,820,1440]) for(const theme of ['light','dark'] as const) {
   test(`new cards fit ${width}px ${theme}`,async({page})=>{
     await page.setViewportSize({width,height:1000});

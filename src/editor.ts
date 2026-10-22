@@ -253,14 +253,14 @@ export class OmnibatteryCardEditor extends LitElement {
             <small id="battery-help">Add one Battery card for each device you want to display.</small>
           </label>` : nothing}
         ${isEnergyToday ? html`<label class="toggle"><input type="checkbox" .checked=${config.show_forecasts !== false} @change=${(event: Event) => this.updateConfig('show_forecasts', (event.target as HTMLInputElement).checked)} /><span>Show remaining forecasts</span></label>` : nothing}
-        ${isPrice ? this.entityField('import_price_entity', 'Import price entity', 'Required sensor with timestamped raw_today / raw_tomorrow prices.', true) : nothing}
+        ${isPrice ? this.entityField('import_price_entity', 'Import price entity', 'Automatic when one timestamped price source is found. Select one if multiple tariffs exist.', true) : nothing}
         ${isAccuracy ? html`
-          ${this.entityField('saved_forecast_entity', 'Saved forecast entity', 'Required schema 1 snapshot: saved_at and timestamped intervals containing solar_kwh / consumption_kwh. See README.', true)}
+          ${this.entityField('saved_forecast_entity', 'Saved forecast entity', 'Automatically finds a unique schema 1 saved snapshot. Live forecasts are not snapshots; see README for the required format.', true)}
           <label class="field" for="forecast-metric"><span id="forecast-metric-label">Forecast metric</span><select id="forecast-metric" aria-labelledby="forecast-metric-label" @change=${(event: Event) => this.updateConfig('forecast_metric', this.inputValue(event))}>
             <option value="solar" .selected=${config.forecast_metric !== 'home'}>Solar</option><option value="home" .selected=${config.forecast_metric === 'home'}>Consumption</option>
           </select></label>` : nothing}
         ${isSolar ? html`
-          ${this.entityField('dailyGridToHome', 'Grid-to-home energy today', 'Optional kWh or Wh counter excluding grid energy used to charge batteries.')}
+          ${this.entityField('dailyGridToHome', 'Grid-to-home energy today', 'Automatically finds an Omnibattery daily grid-to-home counter when available. Other counters must be selected and exclude battery charging.')}
           <label class="toggle"><input type="checkbox" .checked=${config.assume_no_grid_charging === true} @change=${(event: Event) => this.updateConfig('assume_no_grid_charging', (event.target as HTMLInputElement).checked)} /><span>Assume no grid charging</span></label>
           <label class="toggle"><input type="checkbox" .checked=${config.assume_solar_only_export === true} @change=${(event: Event) => this.updateConfig('assume_solar_only_export', (event.target as HTMLInputElement).checked)} /><span>Assume solar-only export</span></label>` : nothing}
         ${isPlan || isOperation ? html`

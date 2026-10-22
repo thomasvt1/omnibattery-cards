@@ -201,6 +201,8 @@ assume_solar_only_export: true
 
 Self-sufficiency is `(home energy − grid-to-home energy) / home energy`. Supply a daily `dailyGridToHome` counter in Wh/kWh that excludes battery charging. If the installation never charges batteries from the grid, `assume_no_grid_charging: true` explicitly permits using daily grid import instead. Both assumptions default to false; unavailable or inconsistent counters show an em dash. All daily counters must cover the same period and reset together. This metric describes direct grid reliance today, not the historical origin of stored battery energy.
 
+The card automatically discovers an Omnibattery counter with the registry key `daily_grid_to_home_energy` or `system_daily_grid_to_home_energy`, including renamed entities. If the integration does not supply this counter, select an external counter explicitly. Neither a currently disabled grid-charging switch nor total daily battery charging proves how much grid energy went to the home today.
+
 Solar retention is `(solar generation − grid export) / solar generation` and requires `assume_solar_only_export: true`. Leave it disabled when exported energy can come from grid-charged batteries. Retained energy includes battery storage and losses, not just household consumption.
 
 ### Price windows
@@ -212,6 +214,8 @@ import_price_entity: sensor.your_import_price
 
 Shows today's tariff chart and the cheapest/most expensive complete upcoming two-hour windows in published today/tomorrow data. Window averages are duration-weighted; windows may start now or at a tariff boundary (including two hours before an ending boundary). Gaps and overlaps disqualify a window. Negative prices, source units, and timezone-aware physical durations are preserved. Windows are information only, not battery schedules. The current price is taken from the timestamped interval, not an unrelated sensor state.
 
+Without an override, price sources are discovered from `raw_today` / `raw_tomorrow` attributes. A unique source is selected automatically; multiple sources require a choice in the editor because their taxes, export rates, or other costs can differ. An explicitly configured export source is excluded from automatic import selection. An unavailable source is never silently replaced by a different tariff.
+
 ### Forecast accuracy
 
 ```yaml
@@ -221,6 +225,8 @@ forecast_metric: solar # solar (default) or home
 ```
 
 Omnibattery's current timeline does not retain the earlier forecast needed for this comparison. Provide a separately persisted sensor with a frozen snapshot; the card does not create helpers, capture snapshots, or make service calls. The visual editor exposes this input. Without it, the card explains what is missing.
+
+A unique compatible saved snapshot is discovered automatically from its schema, `saved_at`, and interval attributes for the selected metric. Multiple matching snapshots require an explicit selection. Live forecasts and consumption profiles are not substituted for saved snapshots. Explicit source selections always take precedence, including when the selected entity is missing or unavailable.
 
 The sensor must have an available state and these attributes (example timestamps must be replaced with the actual forecast day):
 
