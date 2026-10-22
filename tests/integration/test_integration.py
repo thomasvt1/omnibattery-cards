@@ -76,6 +76,28 @@ async def test_serves_release_bundle(hass, hass_client, freezer):
     assert hass.data[LOVELACE_DATA].resources.async_items() == []
 
 
+async def test_frontend_replacement_needs_only_browser_refresh(hass, hass_client, tmp_path, freezer):
+    freezer.move_to("2026-10-22T12:07:00Z")
+    data = seed(hass, dt_util.utcnow())
+    folder = tmp_path / 'frontend'
+    folder.mkdir()
+    bundle = folder / 'omnibattery-cards.js'
+    bundle.write_text('/* original cards */')
+    entry = MockConfigEntry(domain=DOMAIN, data=data)
+    entry.add_to_hass(hass)
+    with patch('custom_components.omnibattery_cards.frontend.__file__', str(tmp_path / 'frontend.py')):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    client = await hass_client()
+    first = await client.get('/omnibattery_cards/omnibattery-cards.js?v=0.6.0')
+    assert await first.text() == '/* original cards */'
+    assert 'max-age=2678400' not in first.headers.get('Cache-Control', '')
+    bundle.write_text('/* updated cards without restarting Home Assistant */')
+    second = await client.get('/omnibattery_cards/omnibattery-cards.js?v=0.6.0', headers={'If-None-Match': first.headers['ETag']})
+    assert second.status == 200
+    assert await second.text() == '/* updated cards without restarting Home Assistant */'
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
 async def test_ui_flow_and_validation(hass, freezer):
     freezer.move_to("2026-10-22T12:07:00Z")
     data = seed(hass, dt_util.utcnow())
