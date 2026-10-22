@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { retainedShare, priceWindows, forecastAccuracy } from '../../src/data/insights';
+import { companionDaily, retainedShare, priceWindows, forecastAccuracy } from '../../src/data/insights';
 import { createDemo } from '../../src/demo/fixtures';
 import { parsePrices } from '../../src/data/prices';
 import { parseTimeline } from '../../src/data/timeline';
@@ -8,6 +8,21 @@ import type { PriceSeries } from '../../src/types';
 const hour=3600000, start=Date.parse('2026-06-15T00:00:00Z');
 const prices=(values:number[]):PriceSeries=>({entityId:'sensor.price',currency:'EUR',unit:'EUR/kWh',points:values.map((value,i)=>({start:new Date(start+i*hour).toISOString(),end:new Date(start+(i+1)*hour).toISOString(),value}))});
 describe('daily independence',()=>{
+  it('requires current same-period companion counters and excludes stale or missing coverage', () => {
+    const entity = {entity_id: 'sensor.companion', state: '1', attributes: {
+      companion_schema: 1, companion_kind: 'grid_to_home', period_start: '2026-06-15T10:00:00Z', updated_at: '2026-06-15T12:00:00Z',
+      coverage_seconds: 7000, gap_seconds: 200, home_kwh: 4, solar_kwh: 3, grid_import_kwh: 2,
+      grid_export_kwh: 1, grid_to_home_kwh: 1, solar_to_grid_kwh: 0.5,
+    }};
+    const now = Date.parse('2026-06-15T12:00:30Z');
+    const value = companionDaily(entity, now)!;
+    expect(retainedShare(value.home, value.gridToHome)).toBe(75);
+    expect(value.gaps).toBe(200);
+    expect(companionDaily({...entity, state: 'unavailable'}, now)).toBeUndefined();
+    expect(companionDaily(entity, now + 120_000)).toBeUndefined();
+    expect(companionDaily({...entity, attributes: {...entity.attributes, coverage_seconds: 0}}, now)).toBeUndefined();
+    expect(companionDaily({...entity, attributes: {...entity.attributes, period_start: '2026-06-14T23:00:00Z'}}, now)).toBeUndefined();
+  });
   it('calculates physical shares and rejects missing, empty and inconsistent counters',()=>{
     expect(retainedShare(18,4)).toBeCloseTo(77.7778);
     expect(retainedShare(24,6)).toBe(75);
@@ -49,6 +64,13 @@ describe('price windows',()=>{
 describe('saved forecast accuracy',()=>{
   const now=new Date('2026-06-15T12:30:00Z');
   const setup=()=>{const {hass}=createDemo('solar',now);return {entity:hass.states['sensor.demo_saved_forecast'],timeline:parseTimeline(hass.states['sensor.demo_timeline'],now)};};
+  it('checks each companion interval was saved before its measurement began', () => {
+    const {entity, timeline} = setup();
+    const intervals = entity.attributes.intervals as Record<string, unknown>[];
+    intervals[0].saved_at = '2026-06-15T00:01:00Z';
+    intervals[1].saved_at = 'invalid';
+    expect(forecastAccuracy(entity,timeline,'solar',+now).points).toHaveLength(48);
+  });
   it('compares only completed matched intervals against an earlier snapshot',()=>{
     const {entity,timeline}=setup();const result=forecastAccuracy(entity,timeline,'solar',+now);
     expect(result.points).toHaveLength(50);expect(result.forecast).toBeGreaterThan(result.measured);

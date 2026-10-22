@@ -1,6 +1,47 @@
 import { expect, test } from '@playwright/test';
 import type { HomeAssistant } from '../../src/types';
 const names=['solar-independence','price-windows','forecast-accuracy'];
+test('missing insight data offers companion installation and setup', async ({page}) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.demo.setConfig('solar-independence', {entities:{}, assume_no_grid_charging:false, assume_solar_only_export:false});
+    window.demo.setConfig('forecast-accuracy', {saved_forecast_entity:'sensor.absent'});
+  });
+  for (const name of ['solar-independence','forecast-accuracy']) {
+    const card = page.locator(`omnibattery-${name}-card`);
+    await expect(card.getByRole('link', {name:'Install companion integration'})).toHaveAttribute('href', /repository=omnibattery-companion&category=integration/);
+    await expect(card.getByRole('link', {name:'Set up after installation'})).toHaveAttribute('href', /domain=omnibattery_companion/);
+  }
+});
+
+test('companion counters calculate percentages over the recorded period and disclose the allocation model', async ({page}) => {
+  await page.clock.setFixedTime(new Date('2026-06-15T14:00:00Z'));
+  await page.goto('/');
+  await page.evaluate(() => window.demo.setConfig('solar-independence', {entities:{}, assume_no_grid_charging:false, assume_solar_only_export:false}));
+  const card = page.locator('omnibattery-solar-independence-card');
+  await card.evaluate(el => {
+    const card = el as HTMLElement & {hass:HomeAssistant; setConfig: (config: {type:string}) => void};
+    const entity_id = 'sensor.renamed_companion_grid_home';
+    card.hass = {...card.hass, states: {...card.hass.states, [entity_id]: {entity_id, state:'1', attributes: {
+      companion_schema:1, companion_kind:'grid_to_home', source_timeline:'sensor.demo_timeline', estimated:true,
+      period_start:'2026-06-15T12:00:00Z', updated_at:'2026-06-15T14:00:00Z', coverage_seconds:7100, gap_seconds:100,
+      home_kwh:4, solar_kwh:2, grid_import_kwh:3, grid_export_kwh:1, grid_to_home_kwh:1, solar_to_grid_kwh:0.5,
+    }}}};
+    card.setConfig({type:'custom:omnibattery-solar-independence-card'});
+  });
+  await expect(card.locator('.hero')).toHaveText('75 %');
+  await expect(card.locator('.caption')).toHaveText('Calculated self-sufficiency');
+  await expect(card.locator('.footnote').filter({hasText:'Solar-first allocation estimate'})).toBeVisible();
+  await expect(card.locator('.totals')).toContainText('4 kWh');
+  await expect(card.getByRole('link', {name:'Install companion integration'})).toHaveCount(0);
+  await card.evaluate(el => {
+    const c = el as HTMLElement & {hass:HomeAssistant};
+    const old = c.hass.states['sensor.renamed_companion_grid_home'];
+    c.hass = {...c.hass, states:{...c.hass.states,[old.entity_id]:{...old,state:'unavailable'}}};
+  });
+  await expect(card.locator('.hero')).toHaveText('—');
+  await expect(card.getByRole('link', {name:'Configure companion integration'})).toBeVisible();
+});
 test('insight cards discover sources without manual overrides and explain ambiguous tariffs', async ({page}) => {
   await page.clock.install({time: new Date('2026-06-15T14:00:00Z')});
   await page.goto('/');

@@ -2,6 +2,7 @@ import { css, html, svg } from 'lit';
 import { BaseCard } from '../base-card';
 import { forecastAccuracy, type AccuracyPoint } from '../data/insights';
 import { insightStyles } from './insight-styles';
+import { companionSetup } from '../companion';
 
 export class OmnibatteryForecastAccuracyCard extends BaseCard {
   static styles = [BaseCard.styles, insightStyles, css`
@@ -18,6 +19,8 @@ export class OmnibatteryForecastAccuracyCard extends BaseCard {
     const result = forecastAccuracy(sources.savedForecast,this.snapshot.timeline,metric,Date.now());
     if (sources.savedForecastError) result.error = sources.savedForecastError;
     else if (!sources.savedForecast && !this.config.saved_forecast_entity) result.error = 'No saved forecast snapshot found. A live forecast cannot measure past forecast accuracy.';
+    if (sources.savedForecast?.attributes.companion_schema === 1 && ['Select an available saved forecast entity.', 'No complete matching intervals yet.'].includes(result.error ?? '') && !sources.savedForecastError)
+      result.error = 'Recording forecasts. The first comparison appears after a saved interval has been fully measured.';
     const points = result.points;
     const delta = result.measured-result.forecast;
     const start = points[0]?.start ?? 0, end = points.at(-1)?.end ?? 1;
@@ -39,6 +42,7 @@ export class OmnibatteryForecastAccuracyCard extends BaseCard {
         ${[0,1,2,3,4].map(i=>svg`<text x=${32+i*88.5} y="145" text-anchor="middle">${this.time(start+(end-start)*i/4)}</text>`)}
       </svg><div class="stats"><div>Measured<strong>${this.format(result.measured,'kWh')}</strong></div><div>Forecast<strong>${this.format(result.forecast,'kWh')}</strong></div>`}
       <div class="footnote">${result.savedAt===undefined?'Requires a forecast snapshot saved before measurement.':`Forecast saved at ${this.time(result.savedAt)} · ${points.length} matched intervals`}</div>
+      ${result.error ? companionSetup(sources.companionInstalled) : ''}
     </ha-card>`;
   }
 }
