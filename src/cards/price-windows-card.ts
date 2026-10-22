@@ -50,7 +50,7 @@ export class OmnibatteryPriceWindowsCard extends BaseCard {
         <line class="gridline" x1="36" x2="386" y1=${y(0)} y2=${y(0)}/>
         ${[0,1,2,3,4].map(i=>svg`<text x=${36+i*87.5} y="140" text-anchor="middle">${this.time(start+(end-start)*i/4)}</text>`)}
         ${now>=start&&now<=end ? svg`<line x1=${x(now)} x2=${x(now)} y1="12" y2="118" stroke="var(--ob-secondary)" stroke-dasharray="3 3"/>` : ''}
-      </svg>` : html`<div class="empty">Select an import price entity with timestamped prices.</div>`}
+      </svg>` : html`<div class="empty">${this.snapshot.insightSources.importPriceError ?? 'Select an import price entity with timestamped prices.'}</div>`}
       ${this.windowRow('Lowest 2-hour window',low,true)}${this.windowRow('Highest 2-hour window',high)}
       <div class="footnote">${series?.points.some(p=>Date.parse(p.start)>now&&dateKey(Date.parse(p.start))!==today) ? 'Upcoming windows · Includes tomorrow' : 'Upcoming windows · Tomorrow prices not published'}</div>
     </ha-card>`;

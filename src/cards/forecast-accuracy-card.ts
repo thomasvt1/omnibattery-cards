@@ -14,7 +14,10 @@ export class OmnibatteryForecastAccuracyCard extends BaseCard {
   private time(stamp:number) { return new Intl.DateTimeFormat(this.hass.locale?.language || 'en',{timeZone:this.hass.config?.time_zone || 'UTC',hour:'2-digit',minute:'2-digit'}).format(stamp); }
   protected renderContent() {
     const metric = this.config.forecast_metric ?? 'solar';
-    const result = forecastAccuracy(this.config.saved_forecast_entity ? this.hass.states[this.config.saved_forecast_entity] : undefined,this.snapshot.timeline,metric,Date.now());
+    const sources = this.snapshot.insightSources;
+    const result = forecastAccuracy(sources.savedForecast,this.snapshot.timeline,metric,Date.now());
+    if (sources.savedForecastError) result.error = sources.savedForecastError;
+    else if (!sources.savedForecast && !this.config.saved_forecast_entity) result.error = 'No saved forecast snapshot found. A live forecast cannot measure past forecast accuracy.';
     const points = result.points;
     const delta = result.measured-result.forecast;
     const start = points[0]?.start ?? 0, end = points.at(-1)?.end ?? 1;

@@ -83,10 +83,16 @@ export interface PriceSeries {
   points: { start: string; end: string; value: number }[];
 }
 export interface Snapshot {
+  insightSources: InsightSources;
   error?: string; warnings: string[]; integrationId?: string;
   grid: Metric; solar: Metric; home: Metric; cellPower: Metric; acPower: Metric;
   soc: Metric; stored: Metric; capacity: Metric;
   daily: { solar: Metric; home: Metric; gridImport: Metric; gridExport: Metric; charge: Metric; discharge: Metric };
   batteries: BatteryModel[]; status: StatusRow[]; timeline: TimelineModel;
   importPrices?: PriceSeries; exportPrices?: PriceSeries;
+}
+export interface InsightSources {
+  importPrice?: HassEntity; savedForecast?: HassEntity; gridToHome?: HassEntity;
+  importPriceError?: string; savedForecastError?: string; gridToHomeError?: string;
+  entityIds: string[];
 }
