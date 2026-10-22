@@ -4,6 +4,7 @@
 
 - Classify Omnibattery Cards as a service so configured entries appear on the Integrations dashboard instead of only under Helpers. Existing devices, entities, settings, and recordings are preserved.
 - Add a regression test using Home Assistant’s actual integration type filter.
+- Read the console banner version from the integration manifest at build time.
 
 
 ## 0.6.0 — 2026-10-22
