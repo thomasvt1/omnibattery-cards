@@ -33,3 +33,14 @@ test('live updates retain table scroll and use configured sources',async({page})
   });
   expect(await card.locator('.table-scroll').evaluate(e=>e.scrollTop)).toBe(400);
 });
+
+for(const width of [390,1440])test(`charge bars align across recorded and planned rows at ${width}px`,async({page})=>{
+  await page.setViewportSize({width,height:1000});
+  const card=page.locator('omnibattery-daily-operation-card');
+  await expect(card.locator('tbody tr')).toHaveCount(26);
+  const bars=await card.locator('tbody td:nth-child(3) .meter').evaluateAll(elements=>elements.map(element=>{
+    const rect=element.getBoundingClientRect();return {left:rect.left,width:rect.width};
+  }));
+  expect(Math.max(...bars.map(bar=>bar.left))-Math.min(...bars.map(bar=>bar.left))).toBeLessThan(1);
+  for(const bar of bars)expect(bar.width).toBe(40);
+});

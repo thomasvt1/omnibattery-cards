@@ -36,6 +36,8 @@ export class OmnibatteryDailyOperationCard extends BaseCard {
     .positive { color:var(--ob-charge); }.negative { color:var(--ob-battery); }
     .energy { font-size:var(--ob-value-size,12px); }
     .meter-value { display:flex; justify-content:flex-end; align-items:center; gap:8px; }
+    .charge-level { display:grid; grid-template-columns:40px 5ch auto; justify-content:stretch; }
+    .charge-level .stored { text-align:left; margin-left:0; }
     .meter { display:block; width:40px; height:5px; border-radius:3px; background:var(--ob-subtle); overflow:hidden; }
     .meter i { display:block; height:100%; background:var(--ob-soc); border-radius:inherit; }
     .stored { color:var(--ob-secondary); font-size:10px; margin-left:3px; }
@@ -93,7 +95,7 @@ export class OmnibatteryDailyOperationCard extends BaseCard {
     return html`<tr class=${current?'now':''} aria-current=${current?'time':nothing}>
       <th scope="row">${slot.index>=96 ? '+1d ' : ''}${slot.label}${current ? html`<span class="now-badge">NOW</span>` : nothing}<span class="basis">${basis}</span></th>
       <td><span class=${`advice ${advice.tone}`}>${advice.label}</span></td>
-      <td><div class="meter-value"><span class="meter" aria-hidden="true"><i style=${`width:${soc??0}%`}></i></span><span>${this.format(soc,'%',0)}${stored != null ? html`<span class="stored">(${this.format(stored,'kWh',2)})</span>` : nothing}</span></div></td>
+      <td><div class="meter-value charge-level"><span class="meter" aria-hidden="true"><i style=${`width:${soc??0}%`}></i></span><span>${this.format(soc,'%',0)}</span>${stored != null ? html`<span class="stored">(${this.format(stored,'kWh',2)})</span>` : nothing}</div></td>
       <td class=${`energy ${battery!==null&&battery>0?'positive':battery!==null&&battery<0?'negative':''}`}>${battery!==null&&battery>0?'+':''}${this.format(battery,'kWh',3)}</td>
       <td class="solar energy">${this.format(projected?slot.solarToBatteryForecastKwh??null:null,'kWh',3)}</td>
       <td class="energy">${this.format(home,'kWh',3)}</td>

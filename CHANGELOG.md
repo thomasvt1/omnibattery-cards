@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 — 2026-10-22
+
+- Align Daily operation charge-level bars and percentages across recorded and planned rows, including rows with stored energy in kWh.
+- Add browser regression coverage for charge-bar alignment at mobile and desktop widths.
+
 ## 0.4.0 — 2026-10-21
 
 - Add Daily operation: a quarter-hour table with measured/planned labels, current interval, charge level, battery energy, solar-to-battery, consumption, and optional tariffs.
