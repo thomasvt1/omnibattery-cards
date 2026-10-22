@@ -74,6 +74,8 @@ class CardResources:
                 self.reconciling = False
 
     async def _changed(self, change_type, item_id, item):
+        # ObservableCollection.notify_changes awaits ChangeListener results with
+        # asyncio.gather. The listener must return an awaitable, not None.
         # HACS may finish registering an old download after integration setup.
         # Schedule outside the collection callback to avoid recursive writes.
         if not self.reconciling and change_type != "removed" and owned_resource(item.get("url", "")):
