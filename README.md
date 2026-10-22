@@ -72,6 +72,8 @@ Version 0.6.0 combines the cards and their recording sensors in **one HACS Integ
 
 This is a custom repository, not yet included in HACS's default catalogue.
 
+**Updates:** Python integration changes require a Home Assistant restart. Frontend-only changes can be loaded with a full browser refresh after the bundle is replaced; the integration serves it without long-lived caching. HACS may still request a restart for an Integration update. Local development retains Vite hot reload through `npm run dev`.
+
 ### Migrate from the Dashboard download (0.5.x or earlier)
 
 HACS cannot install one repository under two categories. This category change needs a one-time reinstall; a normal Dashboard update is not sufficient.

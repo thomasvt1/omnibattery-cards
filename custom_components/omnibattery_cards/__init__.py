@@ -25,7 +25,7 @@ async def async_setup(hass, config):
     from homeassistant.loader import async_get_integration
     integration = await async_get_integration(hass, DOMAIN)
     await async_setup_frontend(hass, integration.version)
-    hass.data[DOMAIN]["version"] = integration.version
+    hass.data[DOMAIN]["version"] = str(integration.version)
     return True
 
 
