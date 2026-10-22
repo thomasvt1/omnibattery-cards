@@ -357,7 +357,9 @@ npm run update:examples
 npm run validate:previews
 ```
 
-The build produces one self-contained `dist/omnibattery-cards.js`. Demo fixtures use synthetic names and data; do not commit household identifiers, private Home Assistant URLs, credentials, or raw diagnostics.
+The build produces one self-contained `dist/omnibattery-cards.js` and copies it into the integration's `frontend` folder for packaging. HACS offers release archives only; a source checkout needs `npm run build` before installation. Demo fixtures use synthetic names and data; do not commit household identifiers, private Home Assistant URLs, credentials, or raw diagnostics.
+
+For integration tests, use Python 3.13: `pip install -r requirements-test.txt`, then `pytest -q` after building the cards. The tests cover real Home Assistant setup, recordings, resource migration, and HTTP bundle serving. The optional private MCP replay is skipped without an explicit fixture path.
 
 Run `npm run update:examples` after changing a card's appearance. The script starts and stops its own local demo server and Chromium browser, then writes PNGs directly to `examples/`: every registered card in light and dark themes, all three System battery layouts, and desktop/light and mobile/dark dashboards. It uses a fixed demo time, locale, timezone, and viewport sizes for repeatable captures. Install Chromium with `npx playwright install chromium` before the first run, and commit the regenerated PNGs with the change. If a newly registered card is missing from the demo, the script fails so its fixture can be added.
 

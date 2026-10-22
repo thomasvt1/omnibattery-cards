@@ -28,4 +28,3 @@ All entities have stable unique IDs and survive renaming. Attributes identify th
 
 - Saved forecast: `companion_schema: 1`, `companion_kind: saved_forecast`, `source_timeline`, `schema_version: 1`, `local_date`, `saved_at`, and timestamped `intervals` with `solar_kwh` / `consumption_kwh` and per-interval `saved_at`.
 - Daily counters: `companion_schema: 1`, `companion_kind`, `source_timeline`, `estimated: true`, `allocation_method`, `local_date`, `period_start`, `updated_at`, `coverage_seconds`, `gap_seconds`, and all six `*_kwh` totals from the same observation period.
-

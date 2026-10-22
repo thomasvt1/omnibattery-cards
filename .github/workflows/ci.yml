@@ -30,6 +30,7 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          comment: false
   check:
     runs-on: ubuntu-latest
     steps:
