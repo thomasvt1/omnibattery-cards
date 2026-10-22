@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 from types import SimpleNamespace
 
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.setup import async_setup_component
 from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry, async_fire_time_changed
@@ -10,6 +11,23 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry, async_
 from custom_components.omnibattery_cards.const import DOMAIN
 from custom_components.omnibattery_cards.model import energy_defaults
 from .test_model import timeline
+
+
+async def test_visible_on_integrations_dashboard(hass, hass_ws_client):
+    entry = MockConfigEntry(domain=DOMAIN, data=seed(hass, dt_util.utcnow()))
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await async_setup_component(hass, 'config', {})
+    client = await hass_ws_client(hass)
+    # Match the real Integrations dashboard subscription's type filter.
+    await client.send_json({'id': 1, 'type': 'config_entries/get',
+                            'type_filter': ['device', 'hub', 'service', 'hardware'], 'domain': DOMAIN})
+    response = await client.receive_json()
+    assert response['success']
+    assert [item['entry_id'] for item in response['result']] == [entry.entry_id]
+    await client.send_json({'id': 2, 'type': 'config_entries/get', 'type_filter': ['helper'], 'domain': DOMAIN})
+    assert (await client.receive_json())['result'] == []
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 def seed(hass, now):
@@ -67,11 +85,11 @@ async def test_serves_release_bundle(hass, hass_client, freezer):
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     client = await hass_client()
-    response = await client.get('/omnibattery_cards/omnibattery-cards.js?v=0.6.0')
+    response = await client.get('/omnibattery_cards/omnibattery-cards.js?v=0.6.1')
     assert response.status == 200
     body = await response.text()
     assert 'omnibattery-overview-card' in body
-    assert '0.6.0' in body
+    assert '0.6.1' in body
     assert await hass.config_entries.async_remove(entry.entry_id)
     assert hass.data[LOVELACE_DATA].resources.async_items() == []
 
@@ -88,11 +106,11 @@ async def test_frontend_replacement_needs_only_browser_refresh(hass, hass_client
     with patch('custom_components.omnibattery_cards.frontend.__file__', str(tmp_path / 'frontend.py')):
         assert await hass.config_entries.async_setup(entry.entry_id)
     client = await hass_client()
-    first = await client.get('/omnibattery_cards/omnibattery-cards.js?v=0.6.0')
+    first = await client.get('/omnibattery_cards/omnibattery-cards.js?v=0.6.1')
     assert await first.text() == '/* original cards */'
     assert 'max-age=2678400' not in first.headers.get('Cache-Control', '')
     bundle.write_text('/* updated cards without restarting Home Assistant */')
-    second = await client.get('/omnibattery_cards/omnibattery-cards.js?v=0.6.0', headers={'If-None-Match': first.headers['ETag']})
+    second = await client.get('/omnibattery_cards/omnibattery-cards.js?v=0.6.1', headers={'If-None-Match': first.headers['ETag']})
     assert second.status == 200
     assert await second.text() == '/* updated cards without restarting Home Assistant */'
     assert await hass.config_entries.async_unload(entry.entry_id)

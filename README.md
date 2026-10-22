@@ -80,7 +80,7 @@ HACS cannot install one repository under two categories. This category change ne
 
 1. Keep your dashboard configurations. In HACS, remove the old **Omnibattery Cards Dashboard download**, then remove its custom-repository entry if it remains. Do not delete your dashboard cards.
 2. Add the same repository as an **Integration**, download it, restart Home Assistant, and complete integration setup as above.
-3. Setup replaces recognized old HACS/manual resource URLs with `/omnibattery_cards/omnibattery-cards.js?v=0.6.0`, preserving one resource ID and removing duplicate entries. Query strings such as `hacstag` are ignored when identifying old URLs. Other cards and dashboard configurations are untouched.
+3. Setup replaces recognized old HACS/manual resource URLs with `/omnibattery_cards/omnibattery-cards.js?v=0.6.1`, preserving one resource ID and removing duplicate entries. Query strings such as `hacstag` are ignored when identifying old URLs. Other cards and dashboard configurations are untouched.
 4. Reload every open Home Assistant browser tab. Existing `custom:omnibattery-*` card types and settings continue to work.
 
 Recognized old paths are `/hacsfiles/omnibattery-cards/omnibattery-cards.js`, `/local/community/omnibattery-cards/omnibattery-cards.js`, `/local/omnibattery-cards/omnibattery-cards.js`, and `/local/omnibattery-cards.js`. If you used a renamed file, an absolute URL, or another path, remove that resource yourself before setup; it cannot safely be identified automatically. The integration saves the original recognized resource entries in its own migration backup before changing them, and uses Home Assistant's resource collection API.
@@ -89,7 +89,7 @@ For **YAML-managed resources**, Home Assistant will show a repair instruction in
 
 ```yaml
 resources:
-  - url: /omnibattery_cards/omnibattery-cards.js?v=0.6.0
+  - url: /omnibattery_cards/omnibattery-cards.js?v=0.6.1
     type: module
 ```
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 — 2026-10-22
+
+- Classify Omnibattery Cards as a service so configured entries appear on the Integrations dashboard instead of only under Helpers. Existing devices, entities, settings, and recordings are preserved.
+- Add a regression test using Home Assistant’s actual integration type filter.
+
+
 ## 0.6.0 — 2026-10-22
 
 - Combine recording sensors and cards into one HACS Integration download in this repository.
